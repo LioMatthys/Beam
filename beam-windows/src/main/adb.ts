@@ -69,13 +69,20 @@ async function downloadApk(onProgress: (p: InstallProgress) => void): Promise<st
   const dir = join(app.getPath('userData'), 'apk')
   mkdirSync(dir, { recursive: true })
   const dest = join(dir, APK_NAME)
-  if (existsSync(dest) && statSync(dest).size > 1_000_000) return dest // already cached
 
   onProgress({ phase: 'downloading', message: 'Downloading app…', percent: 0 })
   const res = await fetch(APK_URL)
   if (!res.ok || !res.body) throw new Error(`Download failed (HTTP ${res.status}). Is the release published?`)
 
   const total = Number(res.headers.get('content-length') ?? 0)
+  // Reuse the cached APK only when it byte-matches the current release asset. A plain
+  // "does it exist?" check would serve a stale file whenever the APK is re-uploaded
+  // under the same version (exactly what happens while iterating).
+  if (existsSync(dest) && total > 0 && statSync(dest).size === total) {
+    await res.body.cancel()
+    return dest
+  }
+
   let received = 0
   const fileStream = createWriteStream(dest)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
