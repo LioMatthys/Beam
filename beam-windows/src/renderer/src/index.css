@@ -59,8 +59,9 @@ input {
 }
 
 .screen {
-  flex: 1;
-  min-height: 0;
+  /* `.screen` is rendered straight into #root (a block), so flex:1 did nothing.
+     Pin it to the viewport height so overflow-y has room to scroll. */
+  height: 100%;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
