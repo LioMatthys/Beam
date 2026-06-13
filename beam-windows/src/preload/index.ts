@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron'
-import type { BeamApi } from '../shared/api'
+import type { BeamApi, InstallProgress } from '../shared/api'
 import type { ConnectOptions, ConnectionStatus } from '../shared/protocol'
 
 const api: BeamApi = {
@@ -9,6 +9,15 @@ const api: BeamApi = {
     const listener = (_e: unknown, status: ConnectionStatus): void => cb(status)
     ipcRenderer.on('beam:status', listener)
     return () => ipcRenderer.removeListener('beam:status', listener)
+  },
+  android: {
+    detect: () => ipcRenderer.invoke('android:detect'),
+    install: () => ipcRenderer.invoke('android:install'),
+    onProgress: (cb: (p: InstallProgress) => void) => {
+      const listener = (_e: unknown, p: InstallProgress): void => cb(p)
+      ipcRenderer.on('android:progress', listener)
+      return () => ipcRenderer.removeListener('android:progress', listener)
+    }
   }
 }
 

@@ -16,6 +16,21 @@ export function Connect({ onConnect, onSelfTest, error }: Props): React.JSX.Elem
   const [code, setCode] = useState('')
   const recents = loadRecents()
 
+  const [installMsg, setInstallMsg] = useState('')
+  const [installing, setInstalling] = useState(false)
+
+  const installAndroid = async (): Promise<void> => {
+    setInstalling(true)
+    setInstallMsg('Starting…')
+    const off = window.beam.android.onProgress((p) =>
+      setInstallMsg(p.percent != null ? `${p.message} ${p.percent}%` : p.message)
+    )
+    const r = await window.beam.android.install()
+    off()
+    setInstalling(false)
+    if (!r.ok) setInstallMsg(`⚠ ${r.error}`)
+  }
+
   const portNum = Number(port)
   const valid = host.trim().length > 0 && Number.isInteger(portNum) && portNum > 0 && portNum < 65536
 
@@ -101,6 +116,27 @@ export function Connect({ onConnect, onSelfTest, error }: Props): React.JSX.Elem
       <button className="tbtn" onClick={onSelfTest}>
         Test decoder (no phone needed)
       </button>
+
+      <div className="spacer-md" />
+      <div className="card" style={{ maxWidth: 420 }}>
+        <label className="field-label">First time? Install on the phone</label>
+        <p className="hint" style={{ marginBottom: 12 }}>
+          Connect the phone by USB (with USB debugging on) and click below — Beam installs and
+          opens on it automatically.
+        </p>
+        <button
+          className="tbtn"
+          style={{ width: '100%' }}
+          onClick={installAndroid}
+          disabled={installing}>
+          {installing ? 'Working…' : 'Install on Android (USB)'}
+        </button>
+        {installMsg && (
+          <div className="hint" style={{ marginTop: 10 }}>
+            {installMsg}
+          </div>
+        )}
+      </div>
 
       <div className="spacer-md" />
       <p className="hint" style={{ maxWidth: 420, textAlign: 'center' }}>

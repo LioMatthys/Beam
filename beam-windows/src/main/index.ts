@@ -1,6 +1,7 @@
 import { app, shell, BrowserWindow, ipcMain, MessageChannelMain } from 'electron'
 import { join } from 'node:path'
 import { Connection } from './connection'
+import { detectDevice, installAndLaunch } from './adb'
 import type { MessagePortMain } from 'electron'
 import type { ConnectOptions } from '../shared/protocol'
 
@@ -70,6 +71,17 @@ ipcMain.handle('beam:connect', (_e, opts: ConnectOptions) => {
 
 ipcMain.handle('beam:disconnect', () => {
   connection?.disconnect()
+})
+
+ipcMain.handle('android:detect', () => detectDevice())
+
+ipcMain.handle('android:install', async (e) => {
+  try {
+    const dev = await installAndLaunch((p) => e.sender.send('android:progress', p))
+    return { ok: true, model: dev.model }
+  } catch (err) {
+    return { ok: false, error: (err as Error).message }
+  }
 })
 
 app.whenReady().then(() => {

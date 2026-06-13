@@ -12,10 +12,18 @@ npm run dev
 ```
 
 Enter the phone's **IP**, **port** (default 8787) and the **6-digit code** the phone
-shows, then click *Connecter*.
+shows, then click *Connect*.
 
-No phone yet? Click **« Tester le décodeur (sans téléphone) »** — it runs a local
+No phone yet? Click **"Test decoder (no phone needed)"** — it runs a local
 encode→decode loopback so you can confirm the video pipeline renders.
+
+### Install the phone app over USB
+
+The Connect screen has an **"Install on Android (USB)"** button: with the phone
+connected by USB (USB debugging on + authorized), it finds the device, downloads the
+APK from the [GitHub Release](https://github.com/LioMatthys/Beam/releases/latest), runs
+`adb install -r -g`, and launches Beam — no manual sideloading. It resolves `adb` from
+`ANDROID_HOME`/the default SDK `platform-tools`, then `PATH`. See `src/main/adb.ts`.
 
 ## Scripts
 

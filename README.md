@@ -36,10 +36,12 @@ Both share the same dark, lime→teal visual language (the "Tempo" design system
 | Windows receiver — app launches | ✅ boots, no runtime errors |
 | Android app — TypeScript | ✅ typecheck clean |
 | Android — native Kotlin module compile | ✅ `BUILD SUCCESSFUL` (`:beam-capture:compileDebugKotlin`) |
-| Android — `expo prebuild` + autolinking | ✅ works |
-| End-to-end mirror (phone → PC) | ⏳ needs a physical device/emulator (none connected) |
+| Android APK (English UI, survives screen lock) | ✅ built on EAS, published as [`v0.1.0`](https://github.com/LioMatthys/Beam/releases/tag/v0.1.0) |
+| One-click USB install (Windows "Install on Android" button) | ✅ built (downloads the release APK via adb) |
+| End-to-end mirror (phone → PC) | ⏳ install the APK and try it — not yet run against a live device here |
 
-Android build needs JDK 17 + Gradle CLI toolchain flags — see
+The APK is built in the cloud (EAS) because the local native build hits this machine's
+toolchain limits (JDK 17 / Gradle 9.3.1 foojay / NDK link) — see
 [`beam-android/README.md`](./beam-android/README.md#-toolchain-note-this-machine).
 
 ## Quick start
@@ -53,11 +55,24 @@ npm run dev
 Opens the Beam window. Enter the phone's IP, port, and the 6-digit code it shows.
 
 ### Android sender
-```powershell
-cd beam-android
-npm install
-npx expo run:android   # builds the custom dev client (NOT Expo Go — needs native code)
-```
-Tap "Démarrer le partage", accept the screen-capture prompt, read off the IP + code.
+
+The phone app ships as an APK (it has native code, so it can't run in Expo Go).
+Easiest install — straight from the **Windows app**:
+
+1. Connect the phone by USB with **USB debugging** enabled and authorized.
+2. In the Beam window, click **"Install on Android (USB)"** — it downloads the APK,
+   `adb install`s it (no "unknown sources" prompt), and launches it.
+
+Or install manually: grab **[Beam.apk from Releases](https://github.com/LioMatthys/Beam/releases/latest)**,
+copy it to the phone, and tap it (allow "install unknown apps").
+
+Then on the phone tap **"Start sharing"** → **"Start now"**, and read off the IP and
+6-digit code to type into the Windows app. The connection survives a screen lock and
+resumes on unlock.
+
+> **Developing the phone app** with hot reload needs a local native toolchain this
+> machine doesn't fully have (JDK 17 / Gradle / NDK — see
+> [`beam-android/README.md`](./beam-android/README.md)), or build a dev client with
+> `eas build --profile development`.
 
 See each app's own README for details and prerequisites.
