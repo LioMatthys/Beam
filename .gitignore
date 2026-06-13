@@ -1,0 +1,37 @@
+# Dependencies
+node_modules/
+
+# Build output
+beam-windows/out/
+beam-windows/dist/
+dist/
+build/
+**/build/
+**/.cxx/
+**/.gradle/
+
+# Expo / generated native projects — regenerate with `expo prebuild`
+.expo/
+beam-android/android/
+beam-android/ios/
+expo-env.d.ts
+
+# Android signing — NEVER commit these
+beam-android/credentials/
+beam-android/credentials.json
+*.keystore
+*.jks
+
+# Built binaries
+*.apk
+*.aab
+
+# Local JDK / tooling (lives outside the repo, but just in case)
+jdk17/
+
+# Logs / env / OS cruft
+*.log
+.env
+.env.*
+.DS_Store
+Thumbs.db

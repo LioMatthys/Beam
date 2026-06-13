@@ -1,0 +1,16 @@
+# Upload the project INCLUDING the prebuilt android/ (where the local
+# beam-capture module is autolinked into settings.gradle) so the EAS bare build
+# includes it. EAS reinstalls deps and provides the toolchain, so we still skip
+# node_modules and all native build outputs / machine-specific files.
+node_modules/
+ios/
+.expo/
+.gradle/
+build/
+.cxx/
+local.properties
+dist/
+*.log
+*.apk
+# Signing keystore is provided to EAS via credentials.json (read locally), not the tarball.
+credentials/

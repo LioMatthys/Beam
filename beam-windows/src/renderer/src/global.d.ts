@@ -1,0 +1,9 @@
+import type { BeamApi } from '../../shared/api'
+
+declare global {
+  interface Window {
+    beam: BeamApi
+  }
+}
+
+export {}

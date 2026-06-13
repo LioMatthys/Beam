@@ -1,0 +1,14 @@
+appId: life.overture.beam
+productName: Beam
+directories:
+  output: dist
+  buildResources: build
+files:
+  - out/**/*
+  - package.json
+win:
+  target:
+    - target: portable
+      arch:
+        - x64
+  artifactName: Beam-${version}-portable.exe
