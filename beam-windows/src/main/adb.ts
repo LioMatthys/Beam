@@ -40,7 +40,7 @@ export interface InstallProgress {
 
 export async function detectDevice(): Promise<DeviceInfo> {
   try {
-    const { stdout } = await execFileP(resolveAdb(), ['devices', '-l'])
+    const { stdout } = await execFileP(resolveAdb(), ['devices', '-l'], { windowsHide: true })
     const lines = stdout
       .split(/\r?\n/)
       .slice(1) // drop the "List of devices attached" header
@@ -118,7 +118,7 @@ export async function installAndLaunch(onProgress: (p: InstallProgress) => void)
   const { stdout, stderr } = await execFileP(
     adb,
     ['-s', dev.serial!, 'install', '-r', '-g', apk],
-    { maxBuffer: 16 * 1024 * 1024 }
+    { maxBuffer: 16 * 1024 * 1024, windowsHide: true }
   )
   if (/Failure|Error/i.test(stdout + stderr)) {
     throw new Error(`Install failed: ${(stdout + stderr).trim().split(/\r?\n/).pop()}`)
@@ -136,7 +136,7 @@ export async function installAndLaunch(onProgress: (p: InstallProgress) => void)
       '-c',
       'android.intent.category.LAUNCHER',
       '1'
-    ])
+    ], { windowsHide: true })
   } catch {
     // launch is best-effort; the app is installed regardless
   }
