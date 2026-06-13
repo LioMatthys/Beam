@@ -2,6 +2,7 @@ package expo.modules.beamcapture
 
 import android.app.Activity
 import android.content.Context
+import android.media.projection.MediaProjectionConfig
 import android.media.projection.MediaProjectionManager
 import android.os.Build
 import android.util.DisplayMetrics
@@ -92,7 +93,17 @@ class BeamCaptureModule : Module() {
     pendingPromise = promise
 
     val mpm = context.getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
-    activity.startActivityForResult(mpm.createScreenCaptureIntent(), REQ_PROJECTION)
+    // Force whole-screen capture. Without this, Android 14+ lets the user pick
+    // "a single app", which backgrounds Beam (hiding its IP/code) and only mirrors
+    // that one app. createConfigForDefaultDisplay() drops the single-app option, so
+    // the consent dialog offers "Entire screen" only.
+    val intent =
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+        mpm.createScreenCaptureIntent(MediaProjectionConfig.createConfigForDefaultDisplay())
+      } else {
+        mpm.createScreenCaptureIntent()
+      }
+    activity.startActivityForResult(intent, REQ_PROJECTION)
   }
 
   private fun computeParams(config: Map<String, Any?>): CaptureParams {

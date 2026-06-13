@@ -35,11 +35,18 @@ app's **"Install on Android (USB)"** button.
    browser-native `VideoDecoder` (WebCodecs, hardware-accelerated), and paints each
    frame to a `<canvas>`.
 
-## v1 scope
+## Scope
 
 - ✅ Live screen mirroring (phone → PC), Wi-Fi, same network.
-- ⛔ Remote control (mouse/keyboard back to the phone) — deferred.
+- 🧪 Click-to-control (experimental): click the mirrored screen on the PC to tap the
+  phone, via an on-device AccessibilityService you enable per session — see
+  [Control from the PC](#control-from-the-pc).
+- ⛔ Keyboard / drag / scroll from the PC — not yet (tap only).
 - ⛔ Audio — deferred.
+
+Screen capture is always **whole-screen**: the phone forces Android's consent dialog to
+"Entire screen" (the "single app" option is removed), so Beam stays in front to show its
+IP + code and mirrors everything.
 
 ## Build status
 
@@ -87,9 +94,25 @@ Easiest install — straight from the **Windows app**:
 Or install manually: grab **[Beam.apk from Releases](https://github.com/LioMatthys/Beam/releases/latest)**,
 copy it to the phone, and tap it (allow "install unknown apps").
 
-Then on the phone tap **"Start sharing"** → **"Start now"**, and read off the IP and
-6-digit code to type into the Windows app. The connection survives a screen lock and
-resumes on unlock.
+Then on the phone tap **"Start sharing"** → **"Start now"** (Android asks to capture the
+whole screen — there's no "single app" choice), and read off the IP and 6-digit code to
+type into the Windows app. The connection survives a screen lock and resumes on unlock.
+
+## Control from the PC
+
+Beam can send taps back to the phone, so you can drive it from the PC (handy for remote
+testing). This is **opt-in, per session**, and off by default.
+
+1. On the phone: **Settings → Accessibility → Beam control → On**, and accept the prompt.
+   (Sideloaded apps: if the toggle is greyed out, first open **Settings → Apps → Beam →
+   ⋮ → Allow restricted settings**.) Turn it on **before** you start sharing, so the phone
+   advertises the control channel when it connects.
+2. Start sharing and connect from the PC as usual.
+3. In the Windows mirror the cursor becomes a **crosshair** when control is live — click
+   anywhere on the screen to tap the phone there.
+
+Taps only, for now. The control channel also exposes a localhost JSON-RPC on
+`127.0.0.1:8788` for automation tools — see [`PROTOCOL.md`](./PROTOCOL.md).
 
 > **Developing the phone app** with hot reload needs a local native toolchain this
 > machine doesn't fully have (JDK 17 / Gradle / NDK — see

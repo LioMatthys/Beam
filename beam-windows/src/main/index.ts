@@ -4,7 +4,7 @@ import { Connection } from './connection'
 import { ControlRelay } from './control-relay'
 import { detectDevice, installAndLaunch } from './adb'
 import type { MessagePortMain } from 'electron'
-import type { ConnectOptions } from '../shared/protocol'
+import type { ConnectOptions, ConnectionStatus } from '../shared/protocol'
 
 let mainWindow: BrowserWindow | null = null
 let framePort: MessagePortMain | null = null
@@ -13,6 +13,16 @@ let clickControlId = 1_000_000 // separate id range from DroidPilot's relay requ
 
 // Bridges DroidPilot <-> the phone control channel over 127.0.0.1:8788.
 const relay = new ControlRelay((req) => (connection ? connection.sendControl(req) : false))
+
+// Send a status update to the renderer, but only while the window is alive.
+// `disconnect()` is called from `window-all-closed`, by which point the window is
+// destroyed (not null), so `mainWindow?.` doesn't help — `.send()` would throw
+// "Object has been destroyed".
+function sendStatus(status: ConnectionStatus): void {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('beam:status', status)
+  }
+}
 
 function createWindow(): void {
   mainWindow = new BrowserWindow({
@@ -33,6 +43,13 @@ function createWindow(): void {
   })
 
   mainWindow.on('ready-to-show', () => mainWindow?.show())
+
+  // Once the window is gone, stop writing to its (now destroyed) webContents and
+  // MessagePort. Both null-outs make the connection callbacks no-ops during teardown.
+  mainWindow.on('closed', () => {
+    mainWindow = null
+    framePort = null
+  })
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
     shell.openExternal(details.url)
@@ -59,12 +76,19 @@ function createWindow(): void {
 function ensureConnection(): Connection {
   if (!connection) {
     connection = new Connection(
-      (status) => mainWindow?.webContents.send('beam:status', status),
+      (status) => sendStatus(status),
       (frame) => {
         // Channel-0 video frame. MessagePortMain structured-clones to the renderer
         // (it can only *transfer* MessagePortMains, not ArrayBuffers — a copy is fine
         // for H.264 frames). `type` carries the keyframe/config flag bits.
-        framePort?.postMessage({ flags: frame.type, data: frame.data })
+        // Guard against a torn-down port (window closing): postMessage on a destroyed
+        // port throws synchronously.
+        if (!framePort) return
+        try {
+          framePort.postMessage({ flags: frame.type, data: frame.data })
+        } catch {
+          framePort = null
+        }
       },
       (resp) => relay.deliverFromPhone(resp) // channel-1 control responses
     )
