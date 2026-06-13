@@ -13,6 +13,20 @@ Two apps, one wire protocol ([`PROTOCOL.md`](./PROTOCOL.md)):
 
 Both share the same dark, lime→teal visual language (the "Tempo" design system).
 
+## Get the phone app
+
+<img src="assets/beam-qr-android.png" width="200" align="right" alt="Scan to download Beam.apk" />
+
+**Scan this with your phone's camera** to download the latest `Beam.apk` straight to the
+device, then open it to install (allow "install unknown apps"). The QR points at
+`releases/latest`, so it keeps working across future releases.
+
+Prefer not to scan? Grab it from the
+[**Releases page**](https://github.com/LioMatthys/Beam/releases/latest), or use the Windows
+app's **"Install on Android (USB)"** button.
+
+<br clear="right" />
+
 ## How it works
 
 1. The phone captures its screen with `MediaProjection`, encodes it to H.264 with the
