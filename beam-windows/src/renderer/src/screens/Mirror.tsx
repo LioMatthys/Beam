@@ -72,6 +72,48 @@ export function Mirror({ mode, status, port, onDisconnect }: Props): React.JSX.E
     else void mirrorRef.current?.requestFullscreen()
   }
 
+  const controllable =
+    mode === 'live' && !!status.hello && status.hello.channels?.includes('control')
+
+  // Click-to-act: map a click on the cast to physical phone pixels and send a tap.
+  const onCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>): void => {
+    const hello = status.hello
+    const canvas = canvasRef.current
+    if (!controllable || !hello || !canvas) return
+    const rect = canvas.getBoundingClientRect()
+    if (rect.width === 0 || rect.height === 0) return
+    const cw = canvas.width || hello.width
+    const ch = canvas.height || hello.height
+    let ix: number
+    let iy: number
+    if (stretch) {
+      ix = (e.clientX - rect.left) / rect.width
+      iy = (e.clientY - rect.top) / rect.height
+    } else {
+      // object-fit: contain — find the letterboxed image rect inside the element
+      const imgAspect = cw / ch
+      const boxAspect = rect.width / rect.height
+      let dispW = rect.width
+      let dispH = rect.height
+      let offX = 0
+      let offY = 0
+      if (boxAspect > imgAspect) {
+        dispW = rect.height * imgAspect
+        offX = (rect.width - dispW) / 2
+      } else {
+        dispH = rect.width / imgAspect
+        offY = (rect.height - dispH) / 2
+      }
+      ix = (e.clientX - rect.left - offX) / dispW
+      iy = (e.clientY - rect.top - offY) / dispH
+    }
+    if (ix < 0 || ix > 1 || iy < 0 || iy > 1) return
+    void window.beam.control('tap', {
+      x: Math.round(ix * hello.physWidth),
+      y: Math.round(iy * hello.physHeight)
+    })
+  }
+
   const deviceName = mode === 'demo' ? 'Local demo' : (status.hello?.device ?? 'Phone')
   const res = status.hello ? `${status.hello.width}×${status.hello.height}` : ''
   const waiting = mode === 'live' && status.phase !== 'streaming'
@@ -96,7 +138,11 @@ export function Mirror({ mode, status, port, onDisconnect }: Props): React.JSX.E
       </div>
 
       <div className={`mirror ${stretch ? 'stretch' : ''}`} ref={mirrorRef}>
-        <canvas ref={canvasRef} />
+        <canvas
+          ref={canvasRef}
+          onClick={onCanvasClick}
+          style={{ cursor: controllable ? 'crosshair' : 'default' }}
+        />
         {waiting && (
           <div style={{ position: 'absolute', textAlign: 'center' }}>
             <div className="waiting">

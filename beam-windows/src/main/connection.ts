@@ -1,7 +1,14 @@
 import net from 'node:net'
 import { FrameParser } from './frame-parser'
-import { parseHello } from '../shared/protocol'
-import type { BeamFrame, ConnectOptions, ConnectionStatus, Hello } from '../shared/protocol'
+import { Channel, HEADER_SIZE, parseHello } from '../shared/protocol'
+import type {
+  BeamFrame,
+  ConnectOptions,
+  ConnectionStatus,
+  ControlRequest,
+  ControlResponse,
+  Hello
+} from '../shared/protocol'
 
 const NEWLINE = 0x0a
 const BACKOFF_MIN = 250
@@ -9,6 +16,7 @@ const BACKOFF_MAX = 4000
 
 type StatusFn = (status: ConnectionStatus) => void
 type FrameFn = (frame: BeamFrame) => void
+type ControlFn = (msg: ControlResponse) => void
 
 /**
  * Owns the TCP socket to the phone: connect → read HELLO → send pairing code →
@@ -31,8 +39,30 @@ export class Connection {
 
   constructor(
     private readonly onStatus: StatusFn,
-    private readonly onFrame: FrameFn
+    private readonly onFrame: FrameFn,
+    private readonly onControl: ControlFn = () => {}
   ) {}
+
+  /** True once the phone's HELLO is in and the socket is live. */
+  isStreaming(): boolean {
+    return this.gotHello && this.socket !== null
+  }
+
+  /** Send a CONTROL-channel request to the phone. Returns false if not connected. */
+  sendControl(req: ControlRequest): boolean {
+    if (!this.socket || !this.gotHello) return false
+    const payload = Buffer.from(JSON.stringify(req), 'utf8')
+    const header = Buffer.alloc(HEADER_SIZE)
+    header.writeUInt32BE(payload.length, 0)
+    header.writeUInt8(Channel.CONTROL, 4)
+    header.writeUInt8(0, 5) // type 0 = JSON
+    try {
+      this.socket.write(Buffer.concat([header, payload]))
+      return true
+    } catch {
+      return false
+    }
+  }
 
   connect(opts: ConnectOptions): void {
     this.opts = opts
@@ -100,7 +130,17 @@ export class Connection {
 
   private handleFrames(chunk: Buffer): void {
     const frames = this.parser.push(chunk)
-    for (const f of frames) this.onFrame(f)
+    for (const f of frames) {
+      if (f.channel === Channel.CONTROL) {
+        try {
+          this.onControl(JSON.parse(Buffer.from(f.data).toString('utf8')) as ControlResponse)
+        } catch {
+          // ignore malformed control message
+        }
+      } else {
+        this.onFrame(f) // channel 0 = video
+      }
+    }
   }
 
   private sendCode(): void {

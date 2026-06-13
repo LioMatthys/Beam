@@ -122,8 +122,25 @@ class BeamCaptureModule : Module() {
       bitrate = bitrateMbps * 1_000_000,
       fps = fps,
       port = Protocol.DEFAULT_PORT,
-      code = code
+      code = code,
+      physWidth = sw,
+      physHeight = sh,
+      rotation = displayRotation()
     )
+  }
+
+  private fun displayRotation(): Int {
+    return try {
+      val wm = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        context.display?.rotation ?: 0
+      } else {
+        @Suppress("DEPRECATION")
+        wm.defaultDisplay.rotation
+      }
+    } catch (_: Exception) {
+      0
+    }
   }
 
   private fun screenSize(): Pair<Int, Int> {

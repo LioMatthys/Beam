@@ -1,6 +1,7 @@
 import { app, shell, BrowserWindow, ipcMain, MessageChannelMain } from 'electron'
 import { join } from 'node:path'
 import { Connection } from './connection'
+import { ControlRelay } from './control-relay'
 import { detectDevice, installAndLaunch } from './adb'
 import type { MessagePortMain } from 'electron'
 import type { ConnectOptions } from '../shared/protocol'
@@ -8,6 +9,10 @@ import type { ConnectOptions } from '../shared/protocol'
 let mainWindow: BrowserWindow | null = null
 let framePort: MessagePortMain | null = null
 let connection: Connection | null = null
+let clickControlId = 1_000_000 // separate id range from DroidPilot's relay requests
+
+// Bridges DroidPilot <-> the phone control channel over 127.0.0.1:8788.
+const relay = new ControlRelay((req) => (connection ? connection.sendControl(req) : false))
 
 function createWindow(): void {
   mainWindow = new BrowserWindow({
@@ -56,11 +61,12 @@ function ensureConnection(): Connection {
     connection = new Connection(
       (status) => mainWindow?.webContents.send('beam:status', status),
       (frame) => {
-        // MessagePortMain structured-clones the payload to the renderer. (It can only
-        // *transfer* other MessagePortMains, not ArrayBuffers, so this is a copy — fine
-        // for H.264 frames, which are tens of KB.)
-        framePort?.postMessage({ flags: frame.flags, data: frame.data })
-      }
+        // Channel-0 video frame. MessagePortMain structured-clones to the renderer
+        // (it can only *transfer* MessagePortMains, not ArrayBuffers — a copy is fine
+        // for H.264 frames). `type` carries the keyframe/config flag bits.
+        framePort?.postMessage({ flags: frame.type, data: frame.data })
+      },
+      (resp) => relay.deliverFromPhone(resp) // channel-1 control responses
     )
   }
   return connection
@@ -72,6 +78,14 @@ ipcMain.handle('beam:connect', (_e, opts: ConnectOptions) => {
 
 ipcMain.handle('beam:disconnect', () => {
   connection?.disconnect()
+})
+
+// Click-to-act: the renderer maps a canvas click to physical phone pixels and
+// sends a one-off control op (e.g. tap). Fire-and-forget; the phone's response
+// carries an id outside the relay's pending set, so the relay ignores it.
+ipcMain.handle('beam:control', (_e, msg: { op: string; args?: Record<string, unknown> }) => {
+  const ok = connection?.sendControl({ id: clickControlId++, op: msg.op, args: msg.args }) ?? false
+  return { ok }
 })
 
 ipcMain.handle('android:detect', () => detectDevice())
@@ -86,6 +100,7 @@ ipcMain.handle('android:install', async (e) => {
 })
 
 app.whenReady().then(() => {
+  relay.start() // 127.0.0.1:8788 for DroidPilot
   createWindow()
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
@@ -94,5 +109,6 @@ app.whenReady().then(() => {
 
 app.on('window-all-closed', () => {
   connection?.disconnect()
+  relay.stop()
   if (process.platform !== 'darwin') app.quit()
 })

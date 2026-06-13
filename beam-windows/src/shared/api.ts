@@ -27,6 +27,9 @@ export interface BeamApi {
   /** Subscribe to connection status updates. Returns an unsubscribe function. */
   onStatus(cb: (status: ConnectionStatus) => void): () => void
 
+  /** Send a one-off control op to the phone (e.g. tap from a cast-video click). */
+  control(op: string, args?: Record<string, unknown>): Promise<{ ok: boolean }>
+
   /** One-click install of the Android app over USB (adb). */
   android: {
     detect(): Promise<DeviceInfo>

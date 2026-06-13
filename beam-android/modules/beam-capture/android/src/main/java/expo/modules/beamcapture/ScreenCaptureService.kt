@@ -13,6 +13,8 @@ import android.hardware.display.DisplayManager
 import android.hardware.display.VirtualDisplay
 import android.media.projection.MediaProjection
 import android.media.projection.MediaProjectionManager
+import android.net.nsd.NsdManager
+import android.net.nsd.NsdServiceInfo
 import android.net.wifi.WifiManager
 import android.os.Build
 import android.os.Handler
@@ -22,6 +24,7 @@ import android.os.PowerManager
 import android.os.SystemClock
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
+import java.security.MessageDigest
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 
@@ -38,6 +41,8 @@ class ScreenCaptureService : Service() {
   private var wakeLock: PowerManager.WakeLock? = null
   private var wifiLock: WifiManager.WifiLock? = null
   private var receiverRegistered = false
+  private var nsdManager: NsdManager? = null
+  private var nsdListener: NsdManager.RegistrationListener? = null
 
   private val frameCount = AtomicInteger(0)
   private val byteCount = AtomicLong(0)
@@ -156,6 +161,9 @@ class ScreenCaptureService : Service() {
       deviceName = "${Build.MANUFACTURER} ${Build.MODEL}".trim(),
       width = params.width,
       height = params.height,
+      physWidth = params.physWidth,
+      physHeight = params.physHeight,
+      rotation = params.rotation,
       fps = params.fps,
       codecProvider = { enc.codecString },
       onClientChange = { count -> BeamBus.status(if (count > 0) "streaming" else "waiting", count) },
@@ -167,6 +175,7 @@ class ScreenCaptureService : Service() {
     )
     srv.start()
     server = srv
+    registerNsd(params.port, params.code)
 
     val dpi = resources.displayMetrics.densityDpi
     virtualDisplay = mp.createVirtualDisplay(
@@ -188,6 +197,52 @@ class ScreenCaptureService : Service() {
   private fun srvLastConfigResend() {
     val cfg = server?.lastConfig ?: return
     server?.sendFrame(cfg, isConfig = true, isKey = false)
+  }
+
+  /** Advertise the link over mDNS (_beam._tcp) so the PC discovers it with no IP entry. */
+  private fun registerNsd(port: Int, code: String) {
+    try {
+      val nsd = getSystemService(Context.NSD_SERVICE) as NsdManager
+      val info = NsdServiceInfo().apply {
+        serviceName = "Beam ${Build.MODEL}"
+        serviceType = "_beam._tcp"
+        setPort(port)
+        setAttribute("v", "2")
+        setAttribute("device", "${Build.MANUFACTURER} ${Build.MODEL}".trim())
+        setAttribute("code", sha8(code))
+      }
+      val listener = object : NsdManager.RegistrationListener {
+        override fun onServiceRegistered(s: NsdServiceInfo?) {}
+        override fun onRegistrationFailed(s: NsdServiceInfo?, errorCode: Int) {}
+        override fun onServiceUnregistered(s: NsdServiceInfo?) {}
+        override fun onUnregistrationFailed(s: NsdServiceInfo?, errorCode: Int) {}
+      }
+      nsd.registerService(info, NsdManager.PROTOCOL_DNS_SD, listener)
+      nsdManager = nsd
+      nsdListener = listener
+    } catch (_: Exception) {
+      // mDNS advertising is best-effort; manual IP / relay still work.
+    }
+  }
+
+  private fun unregisterNsd() {
+    try {
+      nsdListener?.let { nsdManager?.unregisterService(it) }
+    } catch (_: Exception) {
+    }
+    nsdListener = null
+    nsdManager = null
+  }
+
+  private fun sha8(s: String): String {
+    return try {
+      MessageDigest.getInstance("SHA-256")
+        .digest(s.toByteArray(Charsets.UTF_8))
+        .take(4)
+        .joinToString("") { "%02x".format(it) }
+    } catch (_: Exception) {
+      ""
+    }
   }
 
   private val statsTick = object : Runnable {
@@ -244,6 +299,7 @@ class ScreenCaptureService : Service() {
     }
     wakeLock = null
     wifiLock = null
+    unregisterNsd()
     try {
       server?.stop()
     } catch (_: Exception) {

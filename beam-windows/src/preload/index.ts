@@ -10,6 +10,8 @@ const api: BeamApi = {
     ipcRenderer.on('beam:status', listener)
     return () => ipcRenderer.removeListener('beam:status', listener)
   },
+  control: (op: string, args?: Record<string, unknown>) =>
+    ipcRenderer.invoke('beam:control', { op, args }),
   android: {
     detect: () => ipcRenderer.invoke('android:detect'),
     install: () => ipcRenderer.invoke('android:install'),

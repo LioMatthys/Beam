@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="beam_a11y_label">Beam control</string>
+    <string name="beam_a11y_description">Lets a paired computer run wireless UI tests on this device — tapping and reading the screen during a Beam session. You start each session; you can turn this off anytime.</string>
+</resources>
