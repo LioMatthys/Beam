@@ -17,6 +17,7 @@ function createWindow(): void {
     minHeight: 480,
     show: false,
     backgroundColor: '#0F0F14',
+    icon: join(__dirname, '../../build-assets/icon.png'),
     title: 'Beam',
     autoHideMenuBar: true,
     webPreferences: {

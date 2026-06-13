@@ -3,6 +3,7 @@ import { GradientButton } from '../components/GradientButton'
 import { DEFAULT_PORT } from '../../../shared/protocol'
 import type { ConnectOptions } from '../../../shared/protocol'
 import { loadRecents } from '../connect-store'
+import logo from '../assets/logo.png'
 
 interface Props {
   onConnect: (opts: ConnectOptions) => void
@@ -42,6 +43,7 @@ export function Connect({ onConnect, onSelfTest, error }: Props): React.JSX.Elem
   return (
     <div className="screen">
       <div style={{ textAlign: 'center', marginBottom: 22 }}>
+        <img src={logo} width={72} height={72} alt="Beam" style={{ marginBottom: 8 }} />
         <div className="eyebrow">Receiver</div>
         <div className="title">
           <span className="brand-mark">Beam</span>

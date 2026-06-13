@@ -27,6 +27,9 @@ beam-android/credentials.json
 *.apk
 *.aab
 
+# Logo render artifacts (keep the icon-render/ source, skip its output)
+icon-render/out/
+
 # Local JDK / tooling (lives outside the repo, but just in case)
 jdk17/
 

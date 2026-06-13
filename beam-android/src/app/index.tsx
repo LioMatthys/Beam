@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { GradientButton } from '@/components/gradient-button';
@@ -34,7 +34,10 @@ export default function ConnectScreen() {
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
       <View style={styles.header}>
-        <Text style={styles.wordmark}>Beam</Text>
+        <View style={styles.brandRow}>
+          <Image source={require('@/assets/images/logo-mark.png')} style={styles.logo} />
+          <Text style={styles.wordmark}>Beam</Text>
+        </View>
         <StatusPill state={state} />
       </View>
 
@@ -109,6 +112,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 12,
   },
+  brandRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  logo: { width: 26, height: 26, borderRadius: 7 },
   wordmark: { color: c.text, fontSize: 22, fontWeight: '900', letterSpacing: -0.5 },
   content: { flexGrow: 1, justifyContent: 'center', paddingHorizontal: 20 },
 
