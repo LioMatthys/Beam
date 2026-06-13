@@ -60,10 +60,14 @@ input {
 
 .screen {
   flex: 1;
+  min-height: 0;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  /* "safe": center in a tall window, but fall back to top-aligned (scrollable)
+     when content is taller than the window instead of clipping the top. */
+  justify-content: safe center;
   padding: 32px;
 }
 
