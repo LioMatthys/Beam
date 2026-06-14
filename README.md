@@ -22,8 +22,9 @@ device, then open it to install (allow "install unknown apps"). The QR points at
 `releases/latest`, so it keeps working across future releases.
 
 Prefer not to scan? Grab it from the
-[**Releases page**](https://github.com/LioMatthys/Beam/releases/latest), or use the Windows
-app's **"Install on Android (USB)"** button.
+[**Releases page**](https://github.com/LioMatthys/Beam/releases/latest), or click
+**"Download the Android app"** in the Windows app to show the same QR. (USB install lives in
+the Windows app's **☰ menu**.)
 
 <br clear="right" />
 
@@ -87,15 +88,14 @@ Opens the Beam window. Enter the phone's IP, port, and the 6-digit code it shows
 The phone app ships as an APK (it has native code, so it can't run in Expo Go).
 Easiest install — **scan a QR**:
 
-1. Open the Beam **Windows app**. The connect screen shows a **"First time? Install on the
-   phone"** card with an install **QR code**.
+1. In the Beam **Windows app**, click **"Download the Android app"** — a **QR code** appears.
 2. Scan it with the phone's camera, open the download, and tap to install (allow "install
    unknown apps" if asked).
 
 The QR points at the latest release's `Beam.apk`, so it keeps working across releases. You
-can also scan the QR at the top of this page, grab the APK from the
-[**Releases page**](https://github.com/LioMatthys/Beam/releases/latest), or use the app's
-**"Advanced: install via USB"** option (adb install, no "unknown sources" prompt).
+can also scan the QR at the top of this page or grab the APK from the
+[**Releases page**](https://github.com/LioMatthys/Beam/releases/latest). For a USB install
+(adb, no "unknown sources" prompt), use the **☰ menu → Install via USB**.
 
 Then on the phone tap **"Start sharing"** → **"Start now"** (Android asks to capture the
 whole screen — there's no "single app" choice), and read off the IP and 6-digit code to

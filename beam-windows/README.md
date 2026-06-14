@@ -14,13 +14,16 @@ npm run dev
 Enter the phone's **IP**, **port** (default 8787) and the **6-digit code** the phone
 shows, then click *Connect*.
 
-### Install the phone app over USB
+### Install the phone app
 
-The Connect screen has an **"Install on Android (USB)"** button: with the phone
-connected by USB (USB debugging on + authorized), it finds the device, downloads the
-APK from the [GitHub Release](https://github.com/LioMatthys/Beam/releases/latest), runs
-`adb install -r -g`, and launches Beam — no manual sideloading. It resolves `adb` from
-`ANDROID_HOME`/the default SDK `platform-tools`, then `PATH`. See `src/main/adb.ts`.
+Click **"Download the Android app"** on the connect screen to show a **QR code** pointing at
+the latest release's `Beam.apk` — scan it with the phone to download + install.
+
+For a USB install, open the **☰ menu → Install via USB**: with the phone connected by USB
+(USB debugging on + authorized), it finds the device, downloads the APK from the
+[GitHub Release](https://github.com/LioMatthys/Beam/releases/latest), runs `adb install -r -g`,
+and launches Beam. It resolves `adb` from `ANDROID_HOME`/the default SDK `platform-tools`,
+then `PATH`. See `src/main/adb.ts`.
 
 ## Scripts
 
