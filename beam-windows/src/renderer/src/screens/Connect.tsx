@@ -23,8 +23,8 @@ export function Connect({ onConnect, error }: Props): React.JSX.Element {
 
   const [installMsg, setInstallMsg] = useState('')
   const [installing, setInstalling] = useState(false)
-  const [showQr, setShowQr] = useState(true)
-  const [showUsb, setShowUsb] = useState(false)
+  const [showQr, setShowQr] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
 
   const installAndroid = async (): Promise<void> => {
     setInstalling(true)
@@ -48,6 +48,56 @@ export function Connect({ onConnect, error }: Props): React.JSX.Element {
 
   return (
     <div className="screen">
+      {/* Top-right hamburger menu. Fixed to the viewport so it stays put while scrolling. */}
+      <button
+        className="tbtn"
+        aria-label="Menu"
+        onClick={() => setMenuOpen((v) => !v)}
+        style={{
+          position: 'fixed',
+          top: 14,
+          right: 14,
+          zIndex: 20,
+          width: 40,
+          height: 40,
+          padding: 0,
+          fontSize: 18,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+        ☰
+      </button>
+      {menuOpen && (
+        <>
+          <div
+            onClick={() => setMenuOpen(false)}
+            style={{ position: 'fixed', inset: 0, zIndex: 19 }}
+          />
+          <div
+            className="card"
+            style={{ position: 'fixed', top: 60, right: 14, zIndex: 21, width: 280, padding: 16 }}>
+            <label className="field-label">Install via USB</label>
+            <p className="hint" style={{ margin: '6px 0 10px' }}>
+              Connect the phone by USB (USB debugging on) — Beam installs and opens it
+              automatically.
+            </p>
+            <button
+              className="tbtn"
+              style={{ width: '100%' }}
+              onClick={installAndroid}
+              disabled={installing}>
+              {installing ? 'Working…' : 'Install on Android (USB)'}
+            </button>
+            {installMsg && (
+              <div className="hint" style={{ marginTop: 10 }}>
+                {installMsg}
+              </div>
+            )}
+          </div>
+        </>
+      )}
+
       <div style={{ textAlign: 'center', marginBottom: 22 }}>
         <img src={logo} width={72} height={72} alt="Beam" style={{ marginBottom: 8 }} />
         <div className="eyebrow">Receiver</div>
@@ -122,56 +172,26 @@ export function Connect({ onConnect, error }: Props): React.JSX.Element {
 
       <div className="spacer-md" />
       <div className="card" style={{ maxWidth: 420 }}>
-        <label className="field-label">First time? Install on the phone</label>
-        <p className="hint" style={{ marginBottom: 12 }}>
-          Scan this with your phone’s camera to download Beam, then open the file and tap to
-          install (allow “install unknown apps” if asked).
-        </p>
-
-        {showQr && (
-          <div
-            style={{
-              background: '#fff',
-              borderRadius: 12,
-              padding: 20,
-              display: 'flex',
-              justifyContent: 'center'
-            }}>
-            <QRCodeSVG value={APK_QR_URL} size={196} bgColor="#ffffff" fgColor="#0f0f14" level="M" />
-          </div>
-        )}
-
-        <div className="spacer-sm" />
         <button className="tbtn" style={{ width: '100%' }} onClick={() => setShowQr((v) => !v)}>
-          {showQr ? 'Hide QR code' : 'Show install QR code'}
+          {showQr ? 'Hide QR code' : 'Download the Android app'}
         </button>
 
-        <div className="spacer-sm" />
-        {!showUsb ? (
-          <button
-            className="tbtn"
-            style={{ width: '100%', opacity: 0.7, fontWeight: 600 }}
-            onClick={() => setShowUsb(true)}>
-            Advanced: install via USB
-          </button>
-        ) : (
+        {showQr && (
           <>
-            <p className="hint" style={{ marginBottom: 8 }}>
-              Connect the phone by USB (with USB debugging on) — Beam installs and opens it
-              automatically.
+            <div className="spacer-sm" />
+            <div
+              style={{
+                background: '#fff',
+                borderRadius: 12,
+                padding: 20,
+                display: 'flex',
+                justifyContent: 'center'
+              }}>
+              <QRCodeSVG value={APK_QR_URL} size={196} bgColor="#ffffff" fgColor="#0f0f14" level="M" />
+            </div>
+            <p className="hint" style={{ marginTop: 10, textAlign: 'center' }}>
+              Scan with your phone’s camera to install.
             </p>
-            <button
-              className="tbtn"
-              style={{ width: '100%' }}
-              onClick={installAndroid}
-              disabled={installing}>
-              {installing ? 'Working…' : 'Install on Android (USB)'}
-            </button>
-            {installMsg && (
-              <div className="hint" style={{ marginTop: 10 }}>
-                {installMsg}
-              </div>
-            )}
           </>
         )}
       </div>
