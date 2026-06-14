@@ -172,13 +172,28 @@ export function Connect({ onConnect, error }: Props): React.JSX.Element {
 
       <div className="spacer-md" />
       <div className="card" style={{ maxWidth: 420 }}>
-        <button className="tbtn" style={{ width: '100%' }} onClick={() => setShowQr((v) => !v)}>
-          {showQr ? 'Hide QR code' : 'Download the Android app'}
+        <button className="tbtn" style={{ width: '100%' }} onClick={() => setShowQr(true)}>
+          Download the Android app
         </button>
+      </div>
 
-        {showQr && (
-          <>
-            <div className="spacer-sm" />
+      {/* QR install popup. Click the backdrop (or Close) to dismiss. */}
+      {showQr && (
+        <div
+          onClick={() => setShowQr(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 30,
+            background: 'rgba(0, 0, 0, 0.6)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}>
+          <div
+            className="card"
+            onClick={(e) => e.stopPropagation()}
+            style={{ width: 'auto', maxWidth: 320, textAlign: 'center', padding: 24 }}>
             <div
               style={{
                 background: '#fff',
@@ -187,14 +202,18 @@ export function Connect({ onConnect, error }: Props): React.JSX.Element {
                 display: 'flex',
                 justifyContent: 'center'
               }}>
-              <QRCodeSVG value={APK_QR_URL} size={196} bgColor="#ffffff" fgColor="#0f0f14" level="M" />
+              <QRCodeSVG value={APK_QR_URL} size={200} bgColor="#ffffff" fgColor="#0f0f14" level="M" />
             </div>
-            <p className="hint" style={{ marginTop: 10, textAlign: 'center' }}>
+            <p className="hint" style={{ marginTop: 12 }}>
               Scan with your phone’s camera to install.
             </p>
-          </>
-        )}
-      </div>
+            <div className="spacer-sm" />
+            <button className="tbtn" style={{ width: '100%' }} onClick={() => setShowQr(false)}>
+              Close
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="spacer-md" />
       <p className="hint" style={{ maxWidth: 420, textAlign: 'center' }}>
