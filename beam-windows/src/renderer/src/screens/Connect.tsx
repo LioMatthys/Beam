@@ -3,7 +3,12 @@ import { GradientButton } from '../components/GradientButton'
 import { DEFAULT_PORT } from '../../../shared/protocol'
 import type { ConnectOptions } from '../../../shared/protocol'
 import { loadRecents } from '../connect-store'
+import { QRCodeSVG } from 'qrcode.react'
 import logo from '../assets/logo.png'
+
+// Stable GitHub URL that 302-redirects to the latest release's Beam.apk asset, so the
+// QR keeps working across future releases without regenerating it.
+const APK_QR_URL = 'https://github.com/LioMatthys/Beam/releases/latest/download/Beam.apk'
 
 interface Props {
   onConnect: (opts: ConnectOptions) => void
@@ -19,6 +24,8 @@ export function Connect({ onConnect, onSelfTest, error }: Props): React.JSX.Elem
 
   const [installMsg, setInstallMsg] = useState('')
   const [installing, setInstalling] = useState(false)
+  const [showQr, setShowQr] = useState(true)
+  const [showUsb, setShowUsb] = useState(false)
 
   const installAndroid = async (): Promise<void> => {
     setInstalling(true)
@@ -123,20 +130,55 @@ export function Connect({ onConnect, onSelfTest, error }: Props): React.JSX.Elem
       <div className="card" style={{ maxWidth: 420 }}>
         <label className="field-label">First time? Install on the phone</label>
         <p className="hint" style={{ marginBottom: 12 }}>
-          Connect the phone by USB (with USB debugging on) and click below — Beam installs and
-          opens on it automatically.
+          Scan this with your phone’s camera to download Beam, then open the file and tap to
+          install (allow “install unknown apps” if asked).
         </p>
-        <button
-          className="tbtn"
-          style={{ width: '100%' }}
-          onClick={installAndroid}
-          disabled={installing}>
-          {installing ? 'Working…' : 'Install on Android (USB)'}
-        </button>
-        {installMsg && (
-          <div className="hint" style={{ marginTop: 10 }}>
-            {installMsg}
+
+        {showQr && (
+          <div
+            style={{
+              background: '#fff',
+              borderRadius: 12,
+              padding: 20,
+              display: 'flex',
+              justifyContent: 'center'
+            }}>
+            <QRCodeSVG value={APK_QR_URL} size={196} bgColor="#ffffff" fgColor="#0f0f14" level="M" />
           </div>
+        )}
+
+        <div className="spacer-sm" />
+        <button className="tbtn" style={{ width: '100%' }} onClick={() => setShowQr((v) => !v)}>
+          {showQr ? 'Hide QR code' : 'Show install QR code'}
+        </button>
+
+        <div className="spacer-sm" />
+        {!showUsb ? (
+          <button
+            className="tbtn"
+            style={{ width: '100%', opacity: 0.7, fontWeight: 600 }}
+            onClick={() => setShowUsb(true)}>
+            Advanced: install via USB
+          </button>
+        ) : (
+          <>
+            <p className="hint" style={{ marginBottom: 8 }}>
+              Connect the phone by USB (with USB debugging on) — Beam installs and opens it
+              automatically.
+            </p>
+            <button
+              className="tbtn"
+              style={{ width: '100%' }}
+              onClick={installAndroid}
+              disabled={installing}>
+              {installing ? 'Working…' : 'Install on Android (USB)'}
+            </button>
+            {installMsg && (
+              <div className="hint" style={{ marginTop: 10 }}>
+                {installMsg}
+              </div>
+            )}
+          </>
         )}
       </div>
 

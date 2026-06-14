@@ -14,7 +14,9 @@
     "typecheck": "npm run typecheck:node && npm run typecheck:web",
     "package": "electron-vite build && electron-builder --win --x64"
   },
-  "dependencies": {},
+  "dependencies": {
+    "qrcode.react": "^4.2.0"
+  },
   "devDependencies": {
     "@types/node": "^22.9.0",
     "@types/react": "^18.3.12",
