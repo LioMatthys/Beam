@@ -59,6 +59,7 @@ IP + code and mirrors everything.
 | Android app — TypeScript | ✅ typecheck clean |
 | Android — native Kotlin module compile | ✅ `BUILD SUCCESSFUL` (`:beam-capture:compileDebugKotlin`) |
 | Android APK (English UI, survives screen lock) | ✅ built on EAS, published as [`v0.1.0`](https://github.com/LioMatthys/Beam/releases/tag/v0.1.0) |
+| Windows receiver — installer | ✅ `Beam-Setup.exe` (one-click NSIS) published on [`v0.1.0`](https://github.com/LioMatthys/Beam/releases/tag/v0.1.0) |
 | Windows receiver — portable build | ✅ `Beam-windows-x64.zip` published on [`v0.1.0`](https://github.com/LioMatthys/Beam/releases/tag/v0.1.0) (no Node needed) |
 | One-click USB install (Windows "Install on Android" button) | ✅ built (downloads the release APK via adb) |
 | End-to-end mirror (phone → PC) | ⏳ install the APK and try it — not yet run against a live device here |
@@ -71,9 +72,14 @@ toolchain limits (JDK 17 / Gradle 9.3.1 foojay / NDK link) — see
 
 ### Windows receiver
 
-**Ready-made (no Node needed):** download **[Beam-windows-x64.zip](https://github.com/LioMatthys/Beam/releases/latest)**,
-extract it, and run `Beam\Beam.exe`. (Unsigned build, so Windows SmartScreen shows
-"More info → Run anyway" the first time — normal for indie apps.)
+**Installer (simplest):** download
+**[Beam-Setup.exe](https://github.com/LioMatthys/Beam/releases/latest/download/Beam-Setup.exe)**
+and run it — it installs Beam, adds a Start-menu and desktop shortcut, and launches it.
+(Unsigned, so Windows SmartScreen shows "More info → Run anyway" the first time — normal for
+indie apps.)
+
+**Portable (no install):** download **[Beam-windows-x64.zip](https://github.com/LioMatthys/Beam/releases/latest/download/Beam-windows-x64.zip)**,
+extract it, and run `Beam\Beam.exe`.
 
 **From source:**
 ```powershell

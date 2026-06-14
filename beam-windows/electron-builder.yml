@@ -8,7 +8,21 @@ files:
   - package.json
 win:
   icon: build-assets/icon.ico
+  # This machine can't extract electron-builder's winCodeSign tool (it contains macOS
+  # symlinks and the shell lacks symlink privilege / Developer Mode). winCodeSign is only
+  # needed to sign + rcedit the .exe, so skip that. The installer still gets the Beam icon.
+  signAndEditExecutable: false
   target:
-    - target: dir
+    - target: nsis
       arch:
         - x64
+nsis:
+  oneClick: true
+  perMachine: false
+  artifactName: Beam-Setup.${ext}
+  installerIcon: build-assets/icon.ico
+  uninstallerIcon: build-assets/icon.ico
+  installerHeaderIcon: build-assets/icon.ico
+  createDesktopShortcut: true
+  shortcutName: Beam
+  runAfterFinish: true

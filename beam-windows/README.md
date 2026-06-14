@@ -32,7 +32,7 @@ then `PATH`. See `src/main/adb.ts`.
 | `npm run dev` | Launch with hot reload (electron-vite). |
 | `npm run build` | Type-checked production bundle into `out/`. |
 | `npm run typecheck` | `tsc` over main/preload + renderer. |
-| `npm run package` | Build + `electron-builder` → portable `.exe` in `dist/`. |
+| `npm run package` | Build + `electron-builder` → one-click installer `Beam-Setup.exe` in `dist/`. |
 | `node test/decode-smoke/main.js` (via electron) | Headless WebCodecs decode smoke test. |
 
 ## Architecture
