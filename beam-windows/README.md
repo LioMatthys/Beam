@@ -14,9 +14,6 @@ npm run dev
 Enter the phone's **IP**, **port** (default 8787) and the **6-digit code** the phone
 shows, then click *Connect*.
 
-No phone yet? Click **"Test decoder (no phone needed)"** — it runs a local
-encode→decode loopback so you can confirm the video pipeline renders.
-
 ### Install the phone app over USB
 
 The Connect screen has an **"Install on Android (USB)"** button: with the phone
@@ -46,7 +43,6 @@ src/
   renderer/    React UI (Tempo aesthetic)
     src/
       decoder.ts        WebCodecs VideoDecoder → canvas
-      demo.ts           local encode→decode self-test
       frame-port.ts     captures the transferred MessagePort (race-free)
       screens/          Connect.tsx, Mirror.tsx
       components/        GradientButton, StatusPill

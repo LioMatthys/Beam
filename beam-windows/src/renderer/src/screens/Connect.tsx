@@ -12,11 +12,10 @@ const APK_QR_URL = 'https://github.com/LioMatthys/Beam/releases/latest/download/
 
 interface Props {
   onConnect: (opts: ConnectOptions) => void
-  onSelfTest: () => void
   error?: string
 }
 
-export function Connect({ onConnect, onSelfTest, error }: Props): React.JSX.Element {
+export function Connect({ onConnect, error }: Props): React.JSX.Element {
   const [host, setHost] = useState('')
   const [port, setPort] = useState(String(DEFAULT_PORT))
   const [code, setCode] = useState('')
@@ -120,11 +119,6 @@ export function Connect({ onConnect, onSelfTest, error }: Props): React.JSX.Elem
           </>
         )}
       </div>
-
-      <div className="spacer-md" />
-      <button className="tbtn" onClick={onSelfTest}>
-        Test decoder (no phone needed)
-      </button>
 
       <div className="spacer-md" />
       <div className="card" style={{ maxWidth: 420 }}>
