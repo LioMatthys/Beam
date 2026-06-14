@@ -21,6 +21,7 @@ export default function App(): React.JSX.Element {
         host: lastOpts.current.host,
         port: lastOpts.current.port,
         device: status.hello.device,
+        code: lastOpts.current.code,
         at: Date.now()
       })
     }

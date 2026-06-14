@@ -4,6 +4,7 @@ export interface Recent {
   host: string
   port: number
   device?: string
+  code?: string // remembered pairing code, so a known device reconnects without re-typing
   at: number
 }
 

@@ -126,7 +126,7 @@ class BeamCaptureModule : Module() {
     w = w and 1.inv()
     h = h and 1.inv()
 
-    val code = (100000..999999).random().toString()
+    val code = stableCode()
     return CaptureParams(
       width = w.coerceAtLeast(2),
       height = h.coerceAtLeast(2),
@@ -138,6 +138,16 @@ class BeamCaptureModule : Module() {
       physHeight = sh,
       rotation = displayRotation()
     )
+  }
+
+  /** Pairing code that persists across sessions, so a paired PC can reconnect without
+   *  re-typing it (Bluetooth-style). Generated once on first run and stored. */
+  private fun stableCode(): String {
+    val prefs = context.getSharedPreferences("beam", Context.MODE_PRIVATE)
+    prefs.getString("pairing_code", null)?.let { return it }
+    val code = (100000..999999).random().toString()
+    prefs.edit().putString("pairing_code", code).apply()
+    return code
   }
 
   private fun displayRotation(): Int {

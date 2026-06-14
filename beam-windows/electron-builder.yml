@@ -16,6 +16,9 @@ win:
     - target: nsis
       arch:
         - x64
+    - target: dir
+      arch:
+        - x64
 nsis:
   oneClick: true
   perMachine: false

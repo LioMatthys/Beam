@@ -151,19 +151,26 @@ export function Connect({ onConnect, error }: Props): React.JSX.Element {
         {recents.length > 0 && (
           <>
             <div className="spacer-md" />
-            <label className="field-label">Recent</label>
+            <label className="field-label">Paired devices</label>
             {recents.map((r) => (
               <button
                 key={`${r.host}:${r.port}`}
                 className="tbtn"
                 style={{ width: '100%', textAlign: 'left', marginBottom: 6 }}
+                title={r.code ? 'Reconnect (code remembered)' : 'Fill address'}
                 onClick={() => {
-                  setHost(r.host)
-                  setPort(String(r.port))
+                  if (r.code) {
+                    // Known device — reconnect in one click, no code typing.
+                    onConnect({ host: r.host, port: r.port, code: r.code })
+                  } else {
+                    setHost(r.host)
+                    setPort(String(r.port))
+                  }
                 }}
               >
                 {r.device ? `${r.device} — ` : ''}
                 {r.host}:{r.port}
+                {r.code ? '  ·  ↻' : ''}
               </button>
             ))}
           </>
