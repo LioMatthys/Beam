@@ -91,6 +91,10 @@ export class Connection {
     const socket = net.createConnection({ host: this.opts.host, port: this.opts.port })
     this.socket = socket
     socket.setNoDelay(true)
+    // Detect a dead/stalled link (phone dropped abruptly, network blip, out of range)
+    // even when no FIN arrives — keepalive probes fail and surface as a socket error
+    // → reconnect. TCP-level, so a static (un-changing) phone screen won't false-trigger.
+    socket.setKeepAlive(true, 5000)
 
     socket.on('connect', () => {
       this.backoff = BACKOFF_MIN

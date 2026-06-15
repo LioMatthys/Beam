@@ -60,6 +60,15 @@ export function Mirror({ status, port, host, onDisconnect }: Props): React.JSX.E
     return undefined
   }, [status.phase, status.hello])
 
+  // When the stream stops (phone stopped sharing, dropped, or reconnecting), clear the
+  // canvas so we show a clean "Reconnecting…" overlay instead of a frozen last frame.
+  useEffect(() => {
+    if (status.phase !== 'streaming' && canvasRef.current) {
+      const ctx = canvasRef.current.getContext('2d')
+      ctx?.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height)
+    }
+  }, [status.phase])
+
   const toggleFullscreen = (): void => {
     if (document.fullscreenElement) void document.exitFullscreen()
     else void mirrorRef.current?.requestFullscreen()
