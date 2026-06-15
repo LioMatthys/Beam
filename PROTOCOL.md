@@ -89,8 +89,10 @@ The op names match DroidPilot's tool surface so the laptop agent maps 1:1.
 | `type_text` | `{"text":str}` | `null` — inject text into the focused input field |
 | `scroll_to_element` | `{"text":str,"exact"?:bool}` | `{"found":true,"bounds":[l,t,r,b]}` — find + scroll into view |
 | `wait_for_text` | `{"text":str,"exact"?:bool,"timeoutMs"?}` | `{"found":true}` — poll until text appears (or timeout) |
+| `screenshot` | `{"maxLongSide"?:int}` | `{"png":"<base64>"}` — captured via the AccessibilityService screenshot API (Android 11+), downscaled to `maxLongSide`. The **vision fallback** for when the element tree is empty (games, WebViews, canvases). |
 
-These ops enable **full element-driven automation**: read, navigate, fill, interact, all over wireless, no adb.
+These ops enable **full element-driven automation**: read, navigate, fill, interact, and *see*
+(vision fallback), all over wireless, no adb.
 
 **Coordinates are physical device pixels** (`0..physWidth`, `0..physHeight`). The PC maps
 a canvas/video click → physical px using HELLO's `physWidth/physHeight/rotation` before

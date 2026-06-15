@@ -3,16 +3,21 @@ package expo.modules.beamcapture
 import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.GestureDescription
 import android.content.Intent
+import android.graphics.Bitmap
 import android.graphics.Path
 import android.graphics.Rect
 import android.os.Build
+import android.os.Bundle
 import android.os.SystemClock
+import android.util.Base64
 import android.util.DisplayMetrics
-import android.view.KeyCharacterMap
-import android.view.KeyEvent
+import android.view.Display
 import android.view.WindowManager
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
+import java.io.ByteArrayOutputStream
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -84,6 +89,7 @@ class BeamControlService : AccessibilityService() {
       }
       "scroll_to_element" -> scrollToElement(args.getString("text"), args.optBoolean("exact", false))
       "wait_for_text" -> waitForText(args.getString("text"), args.optBoolean("exact", false), args.optInt("timeoutMs", 5000))
+      "screenshot" -> screenshot(args.optInt("maxLongSide", 1280))
       else -> throw IllegalArgumentException("unsupported op: $op")
     }
   }
@@ -169,16 +175,17 @@ class BeamControlService : AccessibilityService() {
     return null
   }
 
-  /** Inject text into the currently focused input field via key events. */
+  /** Set text on the currently focused editable field (replaces its contents). */
   private fun typeText(text: String) {
-    val kcm = KeyCharacterMap.load(KeyCharacterMap.VIRTUAL_KEYBOARD)
-    val events = kcm.getEvents(text.toCharArray())
-    if (events != null) {
-      for (e in events) {
-        e.source = KeyEvent.TOOL_TYPE_UNKNOWN
-        sendKeyEvent(e)
-      }
+    val focused = rootInActiveWindow?.findFocus(AccessibilityNodeInfo.FOCUS_INPUT)
+    if (focused == null || !focused.isEditable) {
+      throw IllegalStateException("no focused editable field to type into")
     }
+    val args = Bundle().apply {
+      putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, text)
+    }
+    val ok = focused.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, args)
+    if (!ok) throw IllegalStateException("set-text action was rejected by the field")
   }
 
   /** Hold down a touch at (x,y) for the given duration. */
@@ -220,6 +227,62 @@ class BeamControlService : AccessibilityService() {
       Thread.sleep(200)
     }
     throw IllegalStateException("text did not appear within ${timeoutMs}ms: $query")
+  }
+
+  /** Capture the screen via the AccessibilityService screenshot API (no MediaProjection).
+   *  Returns a base64 PNG so a vision agent can "see" when the element tree is empty
+   *  (games, WebViews, custom canvases). Downscaled to maxLongSide to bound payload size. */
+  private fun screenshot(maxLongSide: Int): JSONObject {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+      throw IllegalStateException("screenshot requires Android 11+")
+    }
+    val latch = CountDownLatch(1)
+    var png: String? = null
+    var failure: String? = null
+    takeScreenshot(
+      Display.DEFAULT_DISPLAY,
+      mainExecutor,
+      object : TakeScreenshotCallback {
+        override fun onSuccess(result: ScreenshotResult) {
+          try {
+            val buffer = result.hardwareBuffer
+            val hw = Bitmap.wrapHardwareBuffer(buffer, result.colorSpace)
+            buffer.close()
+            if (hw == null) {
+              failure = "could not decode screenshot buffer"
+            } else {
+              // Hardware bitmaps are immutable; copy to software, then optionally downscale.
+              val soft = hw.copy(Bitmap.Config.ARGB_8888, false)
+              hw.recycle()
+              val scaled = downscale(soft, maxLongSide)
+              val baos = ByteArrayOutputStream()
+              scaled.compress(Bitmap.CompressFormat.PNG, 100, baos)
+              if (scaled !== soft) soft.recycle()
+              png = Base64.encodeToString(baos.toByteArray(), Base64.NO_WRAP)
+            }
+          } catch (e: Exception) {
+            failure = e.message ?: "screenshot conversion failed"
+          } finally {
+            latch.countDown()
+          }
+        }
+
+        override fun onFailure(errorCode: Int) {
+          failure = "screenshot failed (code $errorCode)"
+          latch.countDown()
+        }
+      }
+    )
+    if (!latch.await(5, TimeUnit.SECONDS)) throw IllegalStateException("screenshot timed out")
+    failure?.let { throw IllegalStateException(it) }
+    return JSONObject().put("png", png)
+  }
+
+  private fun downscale(bmp: Bitmap, maxLongSide: Int): Bitmap {
+    val longSide = maxOf(bmp.width, bmp.height)
+    if (maxLongSide <= 0 || longSide <= maxLongSide) return bmp
+    val ratio = maxLongSide.toFloat() / longSide
+    return Bitmap.createScaledBitmap(bmp, (bmp.width * ratio).toInt(), (bmp.height * ratio).toInt(), true)
   }
 
   private fun realSize(): Pair<Int, Int> {
