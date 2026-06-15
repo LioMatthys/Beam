@@ -1,7 +1,7 @@
 import { Platform } from 'react-native';
 
 /**
- * Beam design tokens — the Tempo design system (dark, lime → teal), shared with
+ * Beam design tokens — dark theme with an apricot → flashy-blue gradient, shared with
  * the Windows receiver so both apps look like one product.
  */
 const palette = {
@@ -13,20 +13,20 @@ const palette = {
   text: '#F2F4F7',
   textMuted: '#8A95A5',
   textDim: '#5C6675',
-  accent: '#D4FF3F',
-  accentDim: '#A4D824',
-  accentSurface: 'rgba(212, 255, 63, 0.10)',
-  teal: '#2DD4BF',
-  tealSurface: 'rgba(45, 212, 191, 0.10)',
+  accent: '#2E9BFF',
+  accentDim: '#1E7FE0',
+  accentSurface: 'rgba(46, 155, 255, 0.12)',
+  teal: '#FFA24B',
+  tealSurface: 'rgba(255, 162, 75, 0.12)',
   danger: '#FF5A5F',
   dangerSurface: 'rgba(255, 90, 95, 0.12)',
   warning: '#FFB347',
   success: '#34D399',
 };
 
-/** Signature lime → teal gradient. Use for primary CTAs and brand accents. */
+/** Signature apricot → flashy-blue gradient. Use for primary CTAs and brand accents. */
 export const BrandGradient = {
-  colors: ['#D4FF3F', '#2DD4BF'] as const,
+  colors: ['#FFA24B', '#2E9BFF'] as const,
   start: { x: 0, y: 0 },
   end: { x: 1, y: 1 },
 };

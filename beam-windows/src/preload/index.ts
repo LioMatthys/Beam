@@ -12,6 +12,7 @@ const api: BeamApi = {
   },
   control: (op: string, args?: Record<string, unknown>) =>
     ipcRenderer.invoke('beam:control', { op, args }),
+  netInfo: () => ipcRenderer.invoke('beam:netinfo'),
   android: {
     detect: () => ipcRenderer.invoke('android:detect'),
     install: () => ipcRenderer.invoke('android:install'),

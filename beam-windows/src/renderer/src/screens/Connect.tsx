@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { GradientButton } from '../components/GradientButton'
 import { DEFAULT_PORT } from '../../../shared/protocol'
 import type { ConnectOptions } from '../../../shared/protocol'
@@ -25,6 +25,11 @@ export function Connect({ onConnect, error }: Props): React.JSX.Element {
   const [installing, setInstalling] = useState(false)
   const [showQr, setShowQr] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [pcNet, setPcNet] = useState({ ip: '', ssid: '' })
+
+  useEffect(() => {
+    void window.beam.netInfo().then(setPcNet)
+  }, [])
 
   const installAndroid = async (): Promise<void> => {
     setInstalling(true)
@@ -104,6 +109,11 @@ export function Connect({ onConnect, error }: Props): React.JSX.Element {
         <div className="title">
           <span className="brand-mark">Beam</span>
         </div>
+        {pcNet.ip && (
+          <div className="hint" style={{ marginTop: 8 }}>
+            This PC{pcNet.ssid ? ` · ${pcNet.ssid}` : ''} · {pcNet.ip}
+          </div>
+        )}
       </div>
 
       <div className="card">

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { Connect } from './screens/Connect'
 import { Mirror } from './screens/Mirror'
-import { addRecent } from './connect-store'
+import { addRecent, forgetCode } from './connect-store'
 import { onFramePort } from './frame-port'
 import type { ConnectionStatus, ConnectOptions } from '../../shared/protocol'
 
@@ -27,6 +27,17 @@ export default function App(): React.JSX.Element {
     }
   }, [status.phase, status.hello])
 
+  // A terminal error: stop the session and return to Connect. If the phone rejected the
+  // code, forget the stored one so the next attempt pairs fresh (no silent retry loop).
+  useEffect(() => {
+    if (status.phase === 'error' && status.fatal) {
+      if (status.reason === 'auth' && lastOpts.current) {
+        forgetCode(lastOpts.current.host, lastOpts.current.port)
+      }
+      setActive(false)
+    }
+  }, [status.phase, status.fatal, status.reason])
+
   const handleConnect = (opts: ConnectOptions): void => {
     lastOpts.current = opts
     setActive(true)
@@ -39,7 +50,14 @@ export default function App(): React.JSX.Element {
   }
 
   if (active) {
-    return <Mirror status={status} port={port} onDisconnect={handleDisconnect} />
+    return (
+      <Mirror
+        status={status}
+        port={port}
+        host={lastOpts.current?.host}
+        onDisconnect={handleDisconnect}
+      />
+    )
   }
   return (
     <Connect

@@ -22,3 +22,11 @@ export function addRecent(r: Recent): void {
   list.unshift(r)
   localStorage.setItem(KEY, JSON.stringify(list.slice(0, 5)))
 }
+
+/** Drop a remembered code (e.g. after the phone rejects it) so the user re-pairs fresh. */
+export function forgetCode(host: string, port: number): void {
+  const list = loadRecents().map((x) =>
+    x.host === host && x.port === port ? { ...x, code: undefined } : x
+  )
+  localStorage.setItem(KEY, JSON.stringify(list))
+}

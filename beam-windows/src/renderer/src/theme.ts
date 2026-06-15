@@ -12,19 +12,19 @@ export const palette = {
   text: '#F2F4F7',
   textMuted: '#8A95A5',
   textDim: '#5C6675',
-  accent: '#D4FF3F',
-  accentDim: '#A4D824',
-  accentSurface: 'rgba(212, 255, 63, 0.10)',
-  teal: '#2DD4BF',
-  tealSurface: 'rgba(45, 212, 191, 0.10)',
+  accent: '#2E9BFF',
+  accentDim: '#1E7FE0',
+  accentSurface: 'rgba(46, 155, 255, 0.12)',
+  teal: '#FFA24B',
+  tealSurface: 'rgba(255, 162, 75, 0.12)',
   danger: '#FF5A5F',
   dangerSurface: 'rgba(255, 90, 95, 0.12)',
   warning: '#FFB347',
   success: '#34D399'
 } as const
 
-/** Signature lime → teal gradient. Primary CTAs and brand accents. */
-export const brandGradient = `linear-gradient(135deg, ${palette.accent} 0%, ${palette.teal} 100%)`
+/** Signature apricot → flashy-blue gradient. Primary CTAs and brand accents. */
+export const brandGradient = `linear-gradient(135deg, ${palette.teal} 0%, ${palette.accent} 100%)`
 
 export const fontStack =
   "system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"

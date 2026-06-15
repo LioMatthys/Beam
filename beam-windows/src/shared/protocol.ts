@@ -106,6 +106,10 @@ export interface ConnectionStatus {
   hello?: Hello
   /** Human-readable error (when phase === 'error'). */
   message?: string
+  /** Error is terminal — stop auto-reconnecting and return the user to Connect. */
+  fatal?: boolean
+  /** Machine-readable error cause, e.g. 'auth' (code rejected) or 'endpoint'. */
+  reason?: string
 }
 
 export interface ConnectOptions {

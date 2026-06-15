@@ -1,5 +1,6 @@
 appId: life.overture.beam
 productName: Beam
+afterPack: build-assets/afterPack.js
 directories:
   output: dist
   buildResources: build

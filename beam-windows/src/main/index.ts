@@ -1,10 +1,36 @@
 import { app, shell, BrowserWindow, ipcMain, MessageChannelMain } from 'electron'
 import { join } from 'node:path'
+import { networkInterfaces } from 'node:os'
+import { execFile } from 'node:child_process'
 import { Connection } from './connection'
 import { ControlRelay } from './control-relay'
 import { detectDevice, installAndLaunch } from './adb'
 import type { MessagePortMain } from 'electron'
 import type { ConnectOptions, ConnectionStatus } from '../shared/protocol'
+import type { NetInfo } from '../shared/api'
+
+/** This PC's primary LAN IPv4 (first non-internal IPv4 address). */
+function localIpv4(): string {
+  const ifaces = networkInterfaces()
+  for (const addrs of Object.values(ifaces)) {
+    for (const a of addrs ?? []) {
+      if (a.family === 'IPv4' && !a.internal) return a.address
+    }
+  }
+  return ''
+}
+
+/** Connected Wi-Fi SSID via `netsh` (empty if not on Wi-Fi or unavailable). */
+function wifiSsid(): Promise<string> {
+  return new Promise((resolve) => {
+    execFile('netsh', ['wlan', 'show', 'interfaces'], { windowsHide: true }, (err, stdout) => {
+      if (err || !stdout) return resolve('')
+      // Match a line "SSID : Name" but not "BSSID".
+      const m = stdout.split(/\r?\n/).find((l) => /^\s*SSID\s*:/.test(l))
+      resolve(m ? m.split(':').slice(1).join(':').trim() : '')
+    })
+  })
+}
 
 let mainWindow: BrowserWindow | null = null
 let framePort: MessagePortMain | null = null
@@ -110,6 +136,10 @@ ipcMain.handle('beam:disconnect', () => {
 ipcMain.handle('beam:control', (_e, msg: { op: string; args?: Record<string, unknown> }) => {
   const ok = connection?.sendControl({ id: clickControlId++, op: msg.op, args: msg.args }) ?? false
   return { ok }
+})
+
+ipcMain.handle('beam:netinfo', async (): Promise<NetInfo> => {
+  return { ip: localIpv4(), ssid: await wifiSsid() }
 })
 
 ipcMain.handle('android:detect', () => detectDevice())

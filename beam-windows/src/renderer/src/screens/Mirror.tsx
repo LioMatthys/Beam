@@ -6,10 +6,11 @@ import type { ConnectionStatus } from '../../../shared/protocol'
 interface Props {
   status: ConnectionStatus
   port: MessagePort | null
+  host?: string
   onDisconnect: () => void
 }
 
-export function Mirror({ status, port, onDisconnect }: Props): React.JSX.Element {
+export function Mirror({ status, port, host, onDisconnect }: Props): React.JSX.Element {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const mirrorRef = useRef<HTMLDivElement>(null)
   const decoderRef = useRef<BeamDecoder | null>(null)
@@ -17,6 +18,14 @@ export function Mirror({ status, port, onDisconnect }: Props): React.JSX.Element
   const [fps, setFps] = useState(0)
   const [decErr, setDecErr] = useState<string | undefined>()
   const [stretch, setStretch] = useState(false)
+  const [pcNet, setPcNet] = useState({ ip: '', ssid: '' })
+
+  useEffect(() => {
+    void window.beam.netInfo().then(setPcNet)
+  }, [])
+
+  const subnet = (ip: string): string => ip.split('.').slice(0, 3).join('.')
+  const sameSubnet = !!host && !!pcNet.ip && subnet(host) === subnet(pcNet.ip)
 
   // Persistent frame-channel handler: routes incoming frames to whatever decoder
   // is currently active. Decoupled from decoder lifetime so reconnects are seamless.
@@ -127,14 +136,25 @@ export function Mirror({ status, port, onDisconnect }: Props): React.JSX.Element
           style={{ cursor: controllable ? 'crosshair' : 'default' }}
         />
         {waiting && (
-          <div style={{ position: 'absolute', textAlign: 'center' }}>
+          <div style={{ position: 'absolute', textAlign: 'center', maxWidth: 440, padding: 24 }}>
             <div className="waiting">
               {status.phase === 'error'
                 ? (status.message ?? 'Connection error')
                 : status.phase === 'reconnecting'
                   ? 'Reconnecting to phone…'
-                  : 'Connecting to phone…'}
+                  : status.phase === 'handshaking'
+                    ? 'Reached phone — pairing…'
+                    : host
+                      ? `Connecting to ${host}…`
+                      : 'Connecting to phone…'}
             </div>
+            {host && (
+              <div className="hint" style={{ marginTop: 10 }}>
+                Phone {host}
+                {pcNet.ip ? ` · this PC ${pcNet.ip}${pcNet.ssid ? ` (${pcNet.ssid})` : ''}` : ''}
+                {pcNet.ip ? (sameSubnet ? '  ·  same network ✓' : '  ·  different network — check Wi-Fi') : ''}
+              </div>
+            )}
           </div>
         )}
         {decErr && !waiting && (

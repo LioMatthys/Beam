@@ -34,8 +34,12 @@ export class Connection {
 
   // Handshake state for the current socket.
   private gotHello = false
+  private gotFrame = false
   private helloBuf: number[] = []
   private hello: Hello | null = null
+  // Consecutive failures that reached HELLO but never streamed a frame — the signature
+  // of a rejected pairing (wrong/outdated code). Used to stop the reconnect loop.
+  private handshakeFails = 0
 
   constructor(
     private readonly onStatus: StatusFn,
@@ -68,6 +72,7 @@ export class Connection {
     this.opts = opts
     this.desired = true
     this.backoff = BACKOFF_MIN
+    this.handshakeFails = 0
     this.openSocket()
   }
 
@@ -138,6 +143,10 @@ export class Connection {
           // ignore malformed control message
         }
       } else {
+        // First video frame on this socket = the phone accepted us and is streaming.
+        // Clears the "rejected pairing" suspicion so a later network drop reconnects.
+        this.gotFrame = true
+        this.handshakeFails = 0
         this.onFrame(f) // channel 0 = video
       }
     }
@@ -151,12 +160,38 @@ export class Connection {
 
   private onSocketError(err: Error): void {
     if (!this.desired) return
-    this.onStatus({ phase: 'error', message: err.message })
+    const m = err.message || ''
+    const host = this.opts?.host ?? 'the phone'
+    const friendly = /ECONNREFUSED/.test(m)
+      ? `No response from ${host}. Is the phone sharing? (tap “Start sharing”)`
+      : /ETIMEDOUT|EHOSTUNREACH|ENETUNREACH|ENOTFOUND/.test(m)
+        ? `Can't reach ${host} — check both devices are on the same Wi-Fi.`
+        : m
+    this.onStatus({ phase: 'error', message: friendly })
   }
 
   private onSocketClose(): void {
+    // Reached HELLO but never got a frame → the phone almost certainly rejected the
+    // pairing code (it sends HELLO, then closes on a code mismatch). Don't loop forever.
+    const rejected = this.gotHello && !this.gotFrame
     this.teardownSocket()
-    if (this.desired) this.scheduleReconnect()
+    if (!this.desired) return
+    if (rejected) {
+      this.handshakeFails++
+      if (this.handshakeFails >= 2) {
+        this.desired = false
+        this.clearReconnect()
+        this.onStatus({
+          phase: 'error',
+          reason: 'auth',
+          fatal: true,
+          message:
+            'The phone refused the connection — the saved code is outdated. Update Beam on the phone and pair again.'
+        })
+        return
+      }
+    }
+    this.scheduleReconnect()
   }
 
   private scheduleReconnect(): void {
@@ -169,14 +204,17 @@ export class Connection {
   }
 
   private fail(message: string): void {
-    this.onStatus({ phase: 'error', message })
+    // A bad/oversized HELLO means we reached the wrong endpoint — retrying won't help.
+    this.desired = false
+    this.clearReconnect()
     this.teardownSocket()
-    if (this.desired) this.scheduleReconnect()
+    this.onStatus({ phase: 'error', reason: 'endpoint', fatal: true, message })
   }
 
   private resetHandshake(): void {
     this.parser.reset()
     this.gotHello = false
+    this.gotFrame = false
     this.helloBuf = []
     this.hello = null
   }

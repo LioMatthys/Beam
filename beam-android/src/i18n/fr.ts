@@ -9,7 +9,7 @@ export const fr = {
     port: 'Port',
     code: 'Code',
     waitingTitle: 'En attente du PC',
-    waitingHint: 'Garde cet écran ouvert. La connexion se fait toute seule.',
+    waitingHint: 'Garde cet écran ouvert. La capture démarre quand un PC se connecte.',
     liveTitle: 'Un PC regarde ton écran',
     liveHint: 'Tu peux utiliser ton téléphone normalement.',
     noWifi: 'Connecte-toi à un réseau Wi-Fi pour partager ton écran.',

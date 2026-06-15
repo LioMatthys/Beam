@@ -20,6 +20,13 @@ export interface InstallResult {
   error?: string
 }
 
+export interface NetInfo {
+  /** This PC's primary LAN IPv4, e.g. "192.168.1.20" (empty if none found). */
+  ip: string
+  /** Connected Wi-Fi network name (SSID), if on Wi-Fi; empty otherwise. */
+  ssid: string
+}
+
 /** The API surface exposed to the renderer on `window.beam` (see preload). */
 export interface BeamApi {
   connect(opts: ConnectOptions): Promise<void>
@@ -29,6 +36,9 @@ export interface BeamApi {
 
   /** Send a one-off control op to the phone (e.g. tap from a cast-video click). */
   control(op: string, args?: Record<string, unknown>): Promise<{ ok: boolean }>
+
+  /** This PC's LAN network info, for the same-network sanity check on the connect screen. */
+  netInfo(): Promise<NetInfo>
 
   /** One-click install of the Android app over USB (adb). */
   android: {

@@ -1,12 +1,13 @@
 /* Final Beam logo (phone -> arrow -> laptop, "Row"). Emits app-icon assets. */
 const fs = require('fs')
 const path = require('path')
+const { createCanvas } = require('@napi-rs/canvas')
 const OUT = path.join(__dirname, 'out')
 fs.mkdirSync(OUT, { recursive: true })
 
 const BG = '#0F0F14'
-const LIME = '#D4FF3F'
-const TEAL = '#2DD4BF'
+const LIME = '#FFA24B' // apricot orange (gradient start)
+const TEAL = '#2E9BFF' // flashy blue (gradient end)
 let MONO = false
 
 function gd(ctx, x0, y0, x1, y1) {
@@ -74,14 +75,11 @@ function drawMark(ctx, S) {
   laptop(ctx, S, 0.56, 0.36, 0.3, 0.22, S * 0.028)
 }
 
-function canvas(size) {
-  const c = document.createElement('canvas')
-  c.width = size
-  c.height = size
-  return c
+function canvas(w, h) {
+  return createCanvas(w, h === undefined ? w : h)
 }
 function pngBuf(c) {
-  return Buffer.from(c.toDataURL('image/png').split(',')[1], 'base64')
+  return c.toBuffer('image/png')
 }
 function save(name, c) {
   fs.writeFileSync(path.join(OUT, name), pngBuf(c))
@@ -157,8 +155,7 @@ fs.writeFileSync(path.join(OUT, 'icon.ico'), packIco(images))
 
 // Final preview (rounded big + 56px) for confirmation
 const W = 460, H = 360
-const pc = canvas(W)
-pc.height = H
+const pc = canvas(W, H)
 const p = pc.getContext('2d')
 p.fillStyle = '#0a0a0e'
 p.fillRect(0, 0, W, H)

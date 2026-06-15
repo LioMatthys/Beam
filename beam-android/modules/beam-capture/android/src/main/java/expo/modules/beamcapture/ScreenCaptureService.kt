@@ -37,6 +37,7 @@ class ScreenCaptureService : Service() {
   private var virtualDisplay: VirtualDisplay? = null
   private var encoder: H264Encoder? = null
   private var server: BeamServer? = null
+  private var captureParams: CaptureParams? = null
 
   private var wakeLock: PowerManager.WakeLock? = null
   private var wifiLock: WifiManager.WifiLock? = null
@@ -90,7 +91,7 @@ class ScreenCaptureService : Service() {
     startForegroundNotification()
 
     try {
-      startPipeline(resultCode, data, params)
+      startProjection(resultCode, data, params)
     } catch (e: Exception) {
       BeamBus.error(e.message ?: "capture failed")
       teardown()
@@ -140,7 +141,8 @@ class ScreenCaptureService : Service() {
     receiverRegistered = true
   }
 
-  private fun startPipeline(resultCode: Int, data: Intent, params: CaptureParams) {
+  private fun startProjection(resultCode: Int, data: Intent, params: CaptureParams) {
+    captureParams = params
     val mpm = getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
     val mp = mpm.getMediaProjection(resultCode, data)
       ?: throw IllegalStateException("MediaProjection unavailable")
@@ -166,7 +168,15 @@ class ScreenCaptureService : Service() {
       rotation = params.rotation,
       fps = params.fps,
       codecProvider = { enc.codecString },
-      onClientChange = { count -> BeamBus.status(if (count > 0) "streaming" else "waiting", count) },
+      onClientChange = { count ->
+        BeamBus.status(if (count > 0) "streaming" else "waiting", count)
+        // Start screen capture only while a PC is connected — so the red "recording"
+        // indicator (and battery cost) appear only when actually sharing, not while waiting.
+        statsHandler.post {
+          if (count > 0) startCapture() else stopCapture()
+          updateNotification(count > 0)
+        }
+      },
       onClientConnected = { ip -> notifyClientConnected(ip) },
       onError = { msg -> BeamBus.error(msg) },
       onClientReady = {
@@ -178,6 +188,17 @@ class ScreenCaptureService : Service() {
     server = srv
     registerNsd(params.port, params.code)
 
+    // No VirtualDisplay yet: nothing is captured (no red indicator) until a PC connects.
+    lastStatsAt = SystemClock.elapsedRealtime()
+    statsHandler.postDelayed(statsTick, 1000)
+  }
+
+  /** Begin mirroring the screen into the encoder. Triggered when a PC connects. */
+  private fun startCapture() {
+    if (virtualDisplay != null) return
+    val mp = projection ?: return
+    val enc = encoder ?: return
+    val params = captureParams ?: return
     val dpi = resources.displayMetrics.densityDpi
     virtualDisplay = mp.createVirtualDisplay(
       "beam",
@@ -189,9 +210,17 @@ class ScreenCaptureService : Service() {
       null,
       null
     )
+    enc.requestKeyFrame()
+  }
 
-    lastStatsAt = SystemClock.elapsedRealtime()
-    statsHandler.postDelayed(statsTick, 1000)
+  /** Stop mirroring (drops the red indicator) when no PC is connected. Keeps the
+   *  projection alive so a reconnecting PC resumes without a new consent prompt. */
+  private fun stopCapture() {
+    try {
+      virtualDisplay?.release()
+    } catch (_: Exception) {
+    }
+    virtualDisplay = null
   }
 
   /** Re-send the cached SPS/PPS so a freshly connected receiver can configure. */
@@ -286,24 +315,36 @@ class ScreenCaptureService : Service() {
     }
   }
 
-  private fun startForegroundNotification() {
+  private fun buildNotification(text: String): Notification {
     val channelId = "beam_capture"
     val nm = getSystemService(NotificationManager::class.java)
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
       val channel = NotificationChannel(channelId, "Beam", NotificationManager.IMPORTANCE_LOW)
       nm.createNotificationChannel(channel)
     }
-    val notification: Notification = NotificationCompat.Builder(this, channelId)
+    return NotificationCompat.Builder(this, channelId)
       .setContentTitle("Beam")
-      .setContentText("Sharing your screen")
+      .setContentText(text)
       .setSmallIcon(android.R.drawable.ic_menu_view)
       .setOngoing(true)
       .build()
+  }
 
+  private fun startForegroundNotification() {
+    val notification = buildNotification("Waiting for a computer…")
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
       startForeground(NOTIF_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION)
     } else {
       startForeground(NOTIF_ID, notification)
+    }
+  }
+
+  /** Reflect the live state in the ongoing notification. */
+  private fun updateNotification(connected: Boolean) {
+    try {
+      val nm = getSystemService(NotificationManager::class.java)
+      nm.notify(NOTIF_ID, buildNotification(if (connected) "Sharing your screen" else "Waiting for a computer…"))
+    } catch (_: Exception) {
     }
   }
 

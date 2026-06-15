@@ -11,7 +11,7 @@ export const en: Dict = {
     port: 'Port',
     code: 'Code',
     waitingTitle: 'Waiting for the PC',
-    waitingHint: 'Keep this screen open. The connection happens automatically.',
+    waitingHint: 'Keep this screen open. Capture starts when a PC connects.',
     liveTitle: 'A PC is watching your screen',
     liveHint: 'You can use your phone normally.',
     noWifi: 'Connect to a Wi-Fi network to share your screen.',
