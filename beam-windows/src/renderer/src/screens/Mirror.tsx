@@ -24,8 +24,11 @@ export function Mirror({ status, port, host, onDisconnect }: Props): React.JSX.E
     void window.beam.netInfo().then(setPcNet)
   }, [])
 
-  const subnet = (ip: string): string => ip.split('.').slice(0, 3).join('.')
-  const sameSubnet = !!host && !!pcNet.ip && subnet(host) === subnet(pcNet.ip)
+  // Compare the /16 prefix (192.168.*) rather than /24: some routers put devices on
+  // adjacent /24s (e.g. .220 vs .221) of one wider network, where /24 would falsely
+  // read "different". This is just an advisory hint; the real check is whether it connects.
+  const netPrefix = (ip: string): string => ip.split('.').slice(0, 2).join('.')
+  const sameSubnet = !!host && !!pcNet.ip && netPrefix(host) === netPrefix(pcNet.ip)
 
   // Persistent frame-channel handler: routes incoming frames to whatever decoder
   // is currently active. Decoupled from decoder lifetime so reconnects are seamless.
