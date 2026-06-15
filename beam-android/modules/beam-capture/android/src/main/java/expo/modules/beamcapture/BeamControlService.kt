@@ -6,7 +6,10 @@ import android.content.Intent
 import android.graphics.Path
 import android.graphics.Rect
 import android.os.Build
+import android.os.SystemClock
 import android.util.DisplayMetrics
+import android.view.KeyCharacterMap
+import android.view.KeyEvent
 import android.view.WindowManager
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
@@ -16,8 +19,9 @@ import org.json.JSONObject
 /**
  * The "hands" and "eyes": an AccessibilityService that performs the control ops the
  * laptop agent sends over the Beam control channel. Ops: screen_size, tap, swipe, back,
- * home, dump (read the on-screen elements), tap_text (find an element by text + tap it).
- * It reads the screen and injects gestures without adb — the only no-root way to do so.
+ * home, dump (read the on-screen elements), tap_text, type_text, long_press,
+ * scroll_to_element, wait_for_text. It reads the screen and injects gestures/text
+ * without adb — the only no-root way to do so.
  *
  * Enabled once by the user in Settings > Accessibility. While enabled it registers
  * in ControlBus so BeamServer can dispatch ops to it.
@@ -70,6 +74,16 @@ class BeamControlService : AccessibilityService() {
       }
       "dump" -> dumpTree()
       "tap_text" -> tapText(args.getString("text"), args.optBoolean("exact", false))
+      "type_text" -> {
+        typeText(args.getString("text"))
+        null
+      }
+      "long_press" -> {
+        longPress(args.getInt("x"), args.getInt("y"), args.optInt("durationMs", 500))
+        null
+      }
+      "scroll_to_element" -> scrollToElement(args.getString("text"), args.optBoolean("exact", false))
+      "wait_for_text" -> waitForText(args.getString("text"), args.optBoolean("exact", false), args.optInt("timeoutMs", 5000))
       else -> throw IllegalArgumentException("unsupported op: $op")
     }
   }
@@ -153,6 +167,59 @@ class BeamControlService : AccessibilityService() {
       findByText(node.getChild(i), query, exact)?.let { return it }
     }
     return null
+  }
+
+  /** Inject text into the currently focused input field via key events. */
+  private fun typeText(text: String) {
+    val kcm = KeyCharacterMap.load(KeyCharacterMap.VIRTUAL_KEYBOARD)
+    val events = kcm.getEvents(text.toCharArray())
+    if (events != null) {
+      for (e in events) {
+        e.source = KeyEvent.TOOL_TYPE_UNKNOWN
+        sendKeyEvent(e)
+      }
+    }
+  }
+
+  /** Hold down a touch at (x,y) for the given duration. */
+  private fun longPress(x: Int, y: Int, durationMs: Int) {
+    val path = Path().apply { moveTo(x.toFloat(), y.toFloat()) }
+    val stroke = GestureDescription.StrokeDescription(path, 0L, durationMs.toLong().coerceAtLeast(1L))
+    dispatchGesture(GestureDescription.Builder().addStroke(stroke).build(), null, null)
+  }
+
+  /** Find an element by text and scroll into view. Returns bounds if found, or error. */
+  private fun scrollToElement(query: String, exact: Boolean): JSONObject {
+    val root = rootInActiveWindow ?: throw IllegalStateException("no active window")
+    var node = findByText(root, query, exact)
+    var attempts = 0
+    while (node == null && attempts < 5) {
+      // Scroll down to try to reveal the element.
+      val (_, h) = realSize()
+      swipe(540, h / 2, 540, h / 2 - 300, 400)
+      Thread.sleep(300)
+      node = findByText(rootInActiveWindow, query, exact)
+      attempts++
+    }
+    if (node == null) throw IllegalStateException("element not found after scrolling: $query")
+    val r = Rect()
+    node.getBoundsInScreen(r)
+    return JSONObject()
+      .put("found", true)
+      .put("bounds", JSONArray().put(r.left).put(r.top).put(r.right).put(r.bottom))
+  }
+
+  /** Poll until the given text appears on screen (or timeout). */
+  private fun waitForText(query: String, exact: Boolean, timeoutMs: Int): JSONObject {
+    val deadline = SystemClock.elapsedRealtime() + timeoutMs
+    while (SystemClock.elapsedRealtime() < deadline) {
+      val root = rootInActiveWindow
+      if (root != null && findByText(root, query, exact) != null) {
+        return JSONObject().put("found", true)
+      }
+      Thread.sleep(200)
+    }
+    throw IllegalStateException("text did not appear within ${timeoutMs}ms: $query")
   }
 
   private fun realSize(): Pair<Int, Int> {

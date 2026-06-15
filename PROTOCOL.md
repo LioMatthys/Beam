@@ -82,12 +82,15 @@ The op names match DroidPilot's tool surface so the laptop agent maps 1:1.
 | `screen_size` | — | `{"width":W,"height":H}` (physical px) |
 | `tap` | `{"x":int,"y":int}` | `null` |
 | `swipe` | `{"x1","y1","x2","y2","durationMs"?}` | `null` |
+| `long_press` | `{"x":int,"y":int,"durationMs"?}` | `null` |
 | `back` / `home` | — | `null` (global navigation) |
-| `dump` | — | `{"nodes":[{"text"?,"desc"?,"cls","id"?,"clickable","scrollable"?,"bounds":[l,t,r,b]}, …]}` — visible elements via the accessibility tree; `bounds` in physical px |
-| `tap_text` | `{"text":str,"exact"?:bool}` | `{"tapped":true,"x","y"}`, or an error if no element matches |
+| `dump` | — | `{"nodes":[{"text"?,"desc"?,"cls","id"?,"clickable","scrollable"?,"selected"?,"bounds":[l,t,r,b]}, …]}` — visible elements; `bounds` in physical px |
+| `tap_text` | `{"text":str,"exact"?:bool}` | `{"tapped":true,"x":"y"}` |
+| `type_text` | `{"text":str}` | `null` — inject text into the focused input field |
+| `scroll_to_element` | `{"text":str,"exact"?:bool}` | `{"found":true,"bounds":[l,t,r,b]}` — find + scroll into view |
+| `wait_for_text` | `{"text":str,"exact"?:bool,"timeoutMs"?}` | `{"found":true}` — poll until text appears (or timeout) |
 
-`dump` + `tap_text` let the agent navigate **by element** (read the screen, tap by text)
-instead of guessing pixels — all over the same control channel, no adb.
+These ops enable **full element-driven automation**: read, navigate, fill, interact, all over wireless, no adb.
 
 **Coordinates are physical device pixels** (`0..physWidth`, `0..physHeight`). The PC maps
 a canvas/video click → physical px using HELLO's `physWidth/physHeight/rotation` before
