@@ -31,6 +31,13 @@ export default function ConnectScreen() {
   // service reports 'waiting' and we switch to the connection card.
   const sharing = state === 'waiting' || state === 'streaming';
 
+  const statusLabel =
+    state === 'streaming'
+      ? t('connect', 'liveTitle')
+      : sharing
+        ? t('connect', 'waitingTitle')
+        : t('connect', 'tagline');
+
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
       <View style={styles.header}>
@@ -38,7 +45,17 @@ export default function ConnectScreen() {
           <Image source={require('@/assets/images/logo-mark.png')} style={styles.logo} />
           <Text style={styles.wordmark}>Beam</Text>
         </View>
+        <Pressable onPress={() => router.push('/settings')} hitSlop={12} style={styles.gearBtn}>
+          <Image source={require('@/assets/images/gear.png')} style={styles.gearIcon} />
+        </Pressable>
+      </View>
+
+      {/* Status, below the Beam title/logo. */}
+      <View style={styles.statusRow}>
         <StatusPill state={state} />
+        <Text style={styles.statusText} numberOfLines={2}>
+          {statusLabel}
+        </Text>
       </View>
 
       <ScrollView
@@ -46,24 +63,12 @@ export default function ConnectScreen() {
         showsVerticalScrollIndicator={false}>
         {!sharing ? (
           <View style={styles.heroIdle}>
-            <Text style={styles.eyebrow}>{t('connect', 'eyebrow')}</Text>
-            <Text style={styles.tagline}>{t('connect', 'tagline')}</Text>
-            <View style={{ height: 28 }} />
             <GradientButton label={t('connect', 'start')} onPress={start} loading={state === 'starting'} />
-            {!wifiIp && (
-              <Text style={styles.warn}>{t('connect', 'noWifi')}</Text>
-            )}
+            {!wifiIp && <Text style={styles.warn}>{t('connect', 'noWifi')}</Text>}
             {error && <Text style={styles.error}>{error}</Text>}
           </View>
         ) : (
           <View>
-            <Text style={styles.liveTitle}>
-              {state === 'streaming' ? t('connect', 'liveTitle') : t('connect', 'waitingTitle')}
-            </Text>
-            <Text style={styles.liveHint}>
-              {state === 'streaming' ? t('connect', 'liveHint') : t('connect', 'waitingHint')}
-            </Text>
-
             <View style={styles.card}>
               <Text style={styles.cardCaption}>{t('connect', 'instructions')}</Text>
               <InfoRow label={t('connect', 'ip')} value={info?.ip ?? wifiIp ?? '—'} />
@@ -86,10 +91,6 @@ export default function ConnectScreen() {
           </View>
         )}
       </ScrollView>
-
-      <Pressable onPress={() => router.push('/settings')} style={[styles.settingsRow, { paddingBottom: insets.bottom + 8 }]}>
-        <Text style={styles.settingsText}>{t('connect', 'settings')}</Text>
-      </Pressable>
     </View>
   );
 }
@@ -115,6 +116,17 @@ const styles = StyleSheet.create({
   brandRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   logo: { width: 26, height: 26, borderRadius: 7 },
   wordmark: { color: c.text, fontSize: 22, fontWeight: '900', letterSpacing: -0.5 },
+  gearBtn: { padding: 4 },
+  gearIcon: { width: 26, height: 26, tintColor: c.textMuted },
+  statusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: 20,
+    marginTop: 2,
+    marginBottom: 6,
+  },
+  statusText: { flex: 1, color: c.textMuted, fontSize: 14, fontWeight: '700', letterSpacing: 0.2 },
   content: { flexGrow: 1, justifyContent: 'center', paddingHorizontal: 20 },
 
   heroIdle: { alignItems: 'stretch' },

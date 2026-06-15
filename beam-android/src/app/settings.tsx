@@ -95,6 +95,8 @@ function Segmented({
           <Pressable
             key={o.value}
             onPress={() => onChange(o.value)}
+            accessibilityRole="button"
+            accessibilityState={{ selected: active }}
             style={[styles.segItem, active && styles.segItemActive]}>
             <Text style={[styles.segText, active && styles.segTextActive]}>{o.label}</Text>
           </Pressable>

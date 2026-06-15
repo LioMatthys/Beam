@@ -153,6 +153,47 @@ function packIco(imgs) {
 }
 fs.writeFileSync(path.join(OUT, 'icon.ico'), packIco(images))
 
+// --- Settings gear icon (white on transparent; tinted in the app) ---
+function cog(ctx, S, color) {
+  const cx = S / 2, cy = S / 2, teeth = 8
+  const rBody = S * 0.3, rOuter = S * 0.45, rHole = S * 0.13
+  const halfW = S * 0.075
+  ctx.fillStyle = color
+  ctx.save()
+  ctx.translate(cx, cy)
+  // Flat rectangular teeth radiating out (rounded ends).
+  for (let i = 0; i < teeth; i++) {
+    ctx.save()
+    ctx.rotate(((Math.PI * 2) / teeth) * i)
+    rr(ctx, -halfW, -rOuter, halfW * 2, rOuter, halfW * 0.5)
+    ctx.fill()
+    ctx.restore()
+  }
+  ctx.restore()
+  // Solid body, then punch the center hole → a ring with teeth.
+  ctx.beginPath(); ctx.arc(cx, cy, rBody, 0, Math.PI * 2); ctx.fill()
+  ctx.globalCompositeOperation = 'destination-out'
+  ctx.beginPath(); ctx.arc(cx, cy, rHole, 0, Math.PI * 2); ctx.fill()
+  ctx.globalCompositeOperation = 'source-over'
+}
+{
+  const gc = canvas(96)
+  cog(gc.getContext('2d'), 96, '#FFFFFF')
+  save('gear.png', gc)
+}
+
+// --- Android launcher mipmaps, recolored to the new palette (webp, per density) ---
+const DEN = { mdpi: 1, hdpi: 1.5, xhdpi: 2, xxhdpi: 3, xxxhdpi: 4 }
+for (const [d, sc] of Object.entries(DEN)) {
+  const dir = path.join(OUT, 'launcher', 'mipmap-' + d)
+  fs.mkdirSync(dir, { recursive: true })
+  const fg = Math.round(108 * sc) // adaptive foreground (108dp)
+  const lg = Math.round(48 * sc) // legacy square / round (48dp)
+  fs.writeFileSync(path.join(dir, 'ic_launcher_foreground.webp'), foreground(fg, false).toBuffer('image/webp'))
+  fs.writeFileSync(path.join(dir, 'ic_launcher.webp'), fullIcon(lg).toBuffer('image/webp'))
+  fs.writeFileSync(path.join(dir, 'ic_launcher_round.webp'), fullIcon(lg).toBuffer('image/webp'))
+}
+
 // Final preview (rounded big + 56px) for confirmation
 const W = 460, H = 360
 const pc = canvas(W, H)

@@ -71,6 +71,16 @@ input {
   justify-content: safe center;
   padding: 32px;
 }
+.screen::-webkit-scrollbar {
+  width: 10px;
+}
+.screen::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 8px;
+}
+.screen::-webkit-scrollbar-track {
+  background: transparent;
+}
 
 .eyebrow {
   font-size: 11px;

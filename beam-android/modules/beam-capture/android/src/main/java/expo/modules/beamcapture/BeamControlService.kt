@@ -113,6 +113,7 @@ class BeamControlService : AccessibilityService() {
           node.viewIdResourceName?.let { put("id", it) }
           put("clickable", clickable)
           if (node.isScrollable) put("scrollable", true)
+          if (node.isSelected) put("selected", true)
           put("bounds", JSONArray().put(r.left).put(r.top).put(r.right).put(r.bottom))
         })
       }

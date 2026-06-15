@@ -61,7 +61,7 @@ export function Connect({ onConnect, error }: Props): React.JSX.Element {
         style={{
           position: 'fixed',
           top: 14,
-          right: 14,
+          right: 22,
           zIndex: 20,
           width: 40,
           height: 40,
@@ -81,7 +81,7 @@ export function Connect({ onConnect, error }: Props): React.JSX.Element {
           />
           <div
             className="card"
-            style={{ position: 'fixed', top: 60, right: 14, zIndex: 21, width: 280, padding: 16 }}>
+            style={{ position: 'fixed', top: 60, right: 22, zIndex: 21, width: 280, padding: 16 }}>
             <label className="field-label">Install via USB</label>
             <p className="hint" style={{ margin: '6px 0 10px' }}>
               Connect the phone by USB (USB debugging on) — Beam installs and opens it
