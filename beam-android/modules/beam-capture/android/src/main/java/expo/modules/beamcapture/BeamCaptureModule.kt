@@ -65,8 +65,8 @@ class BeamCaptureModule : Module() {
     }
 
     OnCreate {
-      BeamBus.onStatus = { state, clients ->
-        sendEvent("onStatus", mapOf("state" to state, "clients" to clients))
+      BeamBus.onStatus = { state, clients, secure ->
+        sendEvent("onStatus", mapOf("state" to state, "clients" to clients, "secure" to secure))
       }
       BeamBus.onStats = { fps, kbps ->
         sendEvent("onStats", mapOf("fps" to fps, "kbps" to kbps))

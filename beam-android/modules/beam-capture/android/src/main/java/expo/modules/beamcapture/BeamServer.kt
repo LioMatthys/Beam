@@ -24,17 +24,21 @@ class BeamServer(
   private val rotation: Int,
   private val fps: Int,
   private val codecProvider: () -> String,
-  private val onClientChange: (Int) -> Unit,
+  private val onClientChange: (Int, Boolean) -> Unit,
   private val onClientConnected: (String) -> Unit,
   private val onError: (String) -> Unit,
   private val onClientReady: () -> Unit
 ) {
   private var serverSocket: ServerSocket? = null
+  private var tlsServerSocket: ServerSocket? = null
+  private val tlsPort = port + 10
+  @Volatile private var tlsActive = false
   private var client: Socket? = null
   private var out: OutputStream? = null
   private val writeLock = Any()
   @Volatile private var running = false
   private var acceptThread: Thread? = null
+  private var tlsAcceptThread: Thread? = null
 
   /** Most recent SPS/PPS, re-sent to each new client before the keyframe. */
   @Volatile var lastConfig: ByteArray? = null
@@ -42,13 +46,23 @@ class BeamServer(
   fun start() {
     running = true
     serverSocket = ServerSocket(port)
-    acceptThread = Thread({ acceptLoop() }, "beam-accept").also { it.start() }
+    acceptThread = Thread({ acceptLoop(serverSocket!!) }, "beam-accept").also { it.start() }
+    // Additive TLS listener on tlsPort. If TLS setup fails for any reason, the plain
+    // listener still serves — so this can never break the working connection.
+    try {
+      val ss = BeamTls.serverSocketFactory().createServerSocket(tlsPort)
+      tlsServerSocket = ss
+      tlsActive = true
+      tlsAcceptThread = Thread({ acceptLoop(ss) }, "beam-accept-tls").also { it.start() }
+    } catch (e: Exception) {
+      onError("tls setup failed (using plain): ${e.message}")
+    }
   }
 
-  private fun acceptLoop() {
+  private fun acceptLoop(server: ServerSocket) {
     while (running) {
       try {
-        val socket = serverSocket?.accept() ?: break
+        val socket = server.accept()
         socket.tcpNoDelay = true
         handleClient(socket) // blocks until this client disconnects (single client)
       } catch (e: Exception) {
@@ -75,6 +89,7 @@ class BeamServer(
         put("fps", fps)
         put("codec", codecProvider())
         put("channels", channels)
+        if (tlsActive) put("tlsPort", tlsPort)
       }.toString()
       os.write((hello + "\n").toByteArray(Charsets.UTF_8))
       os.flush()
@@ -94,7 +109,7 @@ class BeamServer(
         client = socket
         out = os
       }
-      onClientChange(1)
+      onClientChange(1, socket is javax.net.ssl.SSLSocket)
       onClientConnected(socket.inetAddress?.hostAddress ?: "")
       onClientReady()
 
@@ -112,7 +127,7 @@ class BeamServer(
           out = null
         }
       }
-      onClientChange(0)
+      onClientChange(0, false)
     }
   }
 
@@ -200,7 +215,7 @@ class BeamServer(
         client = null
         out = null
       }
-      onClientChange(0)
+      onClientChange(0, false)
     }
   }
 
@@ -228,7 +243,15 @@ class BeamServer(
     } catch (_: Exception) {
     }
     try {
+      tlsServerSocket?.close()
+    } catch (_: Exception) {
+    }
+    try {
       acceptThread?.join(500)
+    } catch (_: InterruptedException) {
+    }
+    try {
+      tlsAcceptThread?.join(500)
     } catch (_: InterruptedException) {
     }
   }

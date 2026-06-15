@@ -12,6 +12,7 @@ export const fr = {
     waitingHint: 'Garde cet écran ouvert. La capture démarre quand un PC se connecte.',
     liveTitle: 'Un PC regarde ton écran',
     liveHint: 'Tu peux utiliser ton téléphone normalement.',
+    sharingNow: 'Partage',
     noWifi: 'Connecte-toi à un réseau Wi-Fi pour partager ton écran.',
     settings: 'Réglages',
     fps: 'i/s',

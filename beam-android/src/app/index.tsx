@@ -4,6 +4,7 @@ import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-nati
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { GradientButton } from '@/components/gradient-button';
+import { SharingPulse } from '@/components/sharing-pulse';
 import { StatusPill } from '@/components/status-pill';
 import { Colors } from '@/constants/theme';
 import { useConnection } from '@/data/connection-context';
@@ -17,7 +18,7 @@ export default function ConnectScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { t } = useT();
-  const { state, info, stats, error, start, stop } = useConnection();
+  const { state, secure, info, error, start, stop } = useConnection();
   const localNetworkIp = useLocalNetwork();
   const display = useConnectionDisplay(state);
 
@@ -44,6 +45,11 @@ export default function ConnectScreen() {
         <Text style={styles.statusText} numberOfLines={2}>
           {display.title}
         </Text>
+        {state === 'streaming' && (
+          <Text style={[styles.secChip, secure ? styles.secOn : styles.secOff]}>
+            {secure ? '🔒 TLS' : 'Not encrypted'}
+          </Text>
+        )}
       </View>
 
       <ScrollView
@@ -55,7 +61,18 @@ export default function ConnectScreen() {
             {!localNetworkIp && <Text style={styles.warn}>{t('connect', 'noWifi')}</Text>}
             {error && <Text style={styles.error}>{error}</Text>}
           </View>
+        ) : state === 'streaming' ? (
+          // A PC is actually watching — show the live "Sharing" animation, not the
+          // connection details (IP/port/code are only needed before a PC connects).
+          <View>
+            <SharingPulse label={t('connect', 'sharingNow')} />
+            <View style={{ height: 20 }} />
+            <Pressable onPress={stop} style={styles.stopBtn}>
+              <Text style={styles.stopText}>{t('connect', 'stop')}</Text>
+            </Pressable>
+          </View>
         ) : (
+          // Waiting for a PC — show what to type on the computer.
           <View>
             <View style={styles.card}>
               <Text style={styles.cardCaption}>{t('connect', 'instructions')}</Text>
@@ -65,12 +82,6 @@ export default function ConnectScreen() {
               <Text style={styles.codeLabel}>{t('connect', 'code')}</Text>
               <Text style={styles.code}>{info?.code ?? '••••••'}</Text>
             </View>
-
-            {state === 'streaming' && (
-              <Text style={styles.stat}>
-                {stats.fps} {t('connect', 'fps')} · {Math.round(stats.kbps / 1000)} Mb/s
-              </Text>
-            )}
 
             <View style={{ height: 20 }} />
             <Pressable onPress={stop} style={styles.stopBtn}>
@@ -115,6 +126,17 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   statusText: { flex: 1, color: c.textMuted, fontSize: 14, fontWeight: '700', letterSpacing: 0.2 },
+  secChip: {
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.4,
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    borderRadius: 999,
+    overflow: 'hidden',
+  },
+  secOn: { color: c.accent, backgroundColor: c.accentSurface },
+  secOff: { color: c.warning, backgroundColor: c.dangerSurface },
   content: { flexGrow: 1, justifyContent: 'center', paddingHorizontal: 20 },
 
   heroIdle: { alignItems: 'stretch' },

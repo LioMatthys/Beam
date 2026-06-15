@@ -24,6 +24,8 @@ export interface StatusEvent {
   state: CaptureState;
   /** Number of connected receivers (0 or 1 in v1). */
   clients: number;
+  /** True when the connected receiver is over TLS (encrypted). */
+  secure?: boolean;
 }
 
 export interface StatsEvent {

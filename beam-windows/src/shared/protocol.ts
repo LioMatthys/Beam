@@ -110,6 +110,8 @@ export interface ConnectionStatus {
   fatal?: boolean
   /** Machine-readable error cause, e.g. 'auth' (code rejected) or 'endpoint'. */
   reason?: string
+  /** True when the link is encrypted (TLS engaged); false on the plain fallback. */
+  secure?: boolean
 }
 
 export interface ConnectOptions {

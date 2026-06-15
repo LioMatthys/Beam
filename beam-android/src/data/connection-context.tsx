@@ -20,6 +20,7 @@ import {
 interface ConnectionValue {
   state: CaptureState;
   clients: number;
+  secure: boolean;
   info: CaptureInfo | null;
   stats: { fps: number; kbps: number };
   error: string | null;
@@ -40,6 +41,7 @@ const Ctx = createContext<ConnectionValue | null>(null);
 export function ConnectionProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<CaptureState>('idle');
   const [clients, setClients] = useState(0);
+  const [secure, setSecure] = useState(false);
   const [info, setInfo] = useState<CaptureInfo | null>(null);
   const [stats, setStats] = useState({ fps: 0, kbps: 0 });
   const [error, setError] = useState<string | null>(null);
@@ -58,6 +60,7 @@ export function ConnectionProvider({ children }: { children: React.ReactNode }) 
       BeamCapture.addListener('onStatus', (e) => {
         setState(e.state);
         setClients(e.clients);
+        setSecure(e.secure ?? false);
       }),
       BeamCapture.addListener('onStats', (e) => setStats({ fps: e.fps, kbps: e.kbps })),
       BeamCapture.addListener('onError', (e) => {
@@ -104,8 +107,8 @@ export function ConnectionProvider({ children }: { children: React.ReactNode }) 
   }, []);
 
   const value = useMemo<ConnectionValue>(
-    () => ({ state, clients, info, stats, error, settings, ready, start, stop, updateSettings }),
-    [state, clients, info, stats, error, settings, ready, start, stop, updateSettings]
+    () => ({ state, clients, secure, info, stats, error, settings, ready, start, stop, updateSettings }),
+    [state, clients, secure, info, stats, error, settings, ready, start, stop, updateSettings]
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

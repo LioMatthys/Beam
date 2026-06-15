@@ -2,6 +2,8 @@
 
 **Wireless hands and eyes for AI agents on a real Android phone. No ADB, no USB, no developer mode.**
 
+> 🌐 **[Overview & quick start →](https://liomatthys.github.io/Beam/)** · [Download](https://github.com/LioMatthys/Beam/releases/latest)
+
 Beam lets a program on your computer (an AI agent, a test script, or you) **see and control a
 real Android device over Wi-Fi**. Install one app, flip on Accessibility once, and the phone is
 drivable from your machine: read what's on screen, tap by element, type, swipe, scroll, wait for
@@ -103,9 +105,10 @@ anywhere to tap the phone there.
 ## Status and honest limits
 
 - **v1.0** — full element-driven control (the ops above) + live mirror, working over Wi-Fi.
-- **LAN-only, today.** Traffic is plaintext on the local network, gated by a pairing code. Fine on
-  your own Wi-Fi; **not yet safe to expose beyond a trusted network.** Encryption + real auth are
-  the first roadmap item.
+- **Encrypted on the LAN (v1.0.1+).** The link runs over **TLS** (self-signed cert generated on the
+  phone, trust-on-first-use fingerprint pinning), with a 🔒 badge in both apps; it falls back to plain
+  only if TLS can't negotiate. Still **LAN-only** and the pairing code is the authorizer — a full PAKE
+  and a remote relay are the next hardening steps before it leaves a trusted network.
 - **Sideload / enterprise distribution.** Automation via AccessibilityService is restricted on the
   Google Play Store, so Beam distributes as a sideloaded APK (or via MDM). Built for dev tools, QA,
   and internal use, not the consumer app store.

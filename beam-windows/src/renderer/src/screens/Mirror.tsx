@@ -120,6 +120,12 @@ export function Mirror({ status, port, host, onDisconnect }: Props): React.JSX.E
       <div className="topbar">
         <span className="device">{deviceName}</span>
         <StatusPill phase={status.phase} />
+        {status.phase === 'streaming' && (
+          <span className={`pill ${status.secure ? 'live' : 'warn'}`} title={status.secure ? 'Encrypted with TLS' : 'Not encrypted (plain LAN)'}>
+            <span className="dot" />
+            {status.secure ? '🔒 TLS' : 'Not encrypted'}
+          </span>
+        )}
         <span className="grow" />
         {res && <span className="stat">{res}</span>}
         <span className="stat">{fps} fps</span>

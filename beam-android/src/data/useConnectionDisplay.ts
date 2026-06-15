@@ -1,9 +1,9 @@
 import { useMemo } from 'react';
-import type { ConnectionState } from './connection-context';
+import type { CaptureState } from '@/data/beam-capture';
 import { useT } from '@/i18n';
 
 /** Compute display state from connection state (pure, testable). */
-export function useConnectionDisplay(state: ConnectionState) {
+export function useConnectionDisplay(state: CaptureState) {
   const { t } = useT();
 
   return useMemo(() => {

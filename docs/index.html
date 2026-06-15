@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Beam — wireless hands & eyes for AI agents on Android</title>
+    <meta
+      name="description"
+      content="Read and control a real Android phone from your computer over Wi-Fi. No ADB, no USB, no developer mode."
+    />
+    <style>
+      :root {
+        --bg: #0f0f14;
+        --surface: #181820;
+        --surface-2: #22222d;
+        --border: #2a2a36;
+        --text: #f2f4f7;
+        --muted: #8a95a5;
+        --dim: #5c6675;
+        --apricot: #ffa24b;
+        --blue: #2e9bff;
+        --grad: linear-gradient(120deg, #ffa24b 0%, #2e9bff 100%);
+        --font: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        --mono: 'Cascadia Code', Consolas, 'SF Mono', Menlo, monospace;
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      html { scroll-behavior: smooth; }
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--font);
+        line-height: 1.55;
+        -webkit-font-smoothing: antialiased;
+        overflow-x: hidden;
+      }
+      .wrap { max-width: 1040px; margin: 0 auto; padding: 0 24px; }
+      .grad-text {
+        background: var(--grad);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      a { color: var(--blue); text-decoration: none; }
+      a:hover { text-decoration: underline; }
+
+      /* glow backdrop */
+      .glow {
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(60% 50% at 50% 0%, rgba(46, 155, 255, 0.18), transparent 70%),
+          radial-gradient(40% 40% at 80% 10%, rgba(255, 162, 75, 0.14), transparent 70%);
+        pointer-events: none;
+      }
+
+      header { position: relative; padding: 80px 0 56px; text-align: center; }
+      .logo-mark { width: 96px; height: 96px; margin: 0 auto 22px; display: block; filter: drop-shadow(0 8px 24px rgba(46,155,255,0.25)); }
+      h1 { font-size: clamp(40px, 7vw, 76px); font-weight: 900; letter-spacing: -2px; line-height: 1.02; }
+      .tagline { font-size: clamp(17px, 2.4vw, 22px); color: var(--muted); font-weight: 600; max-width: 640px; margin: 18px auto 0; }
+      .pills { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 26px; }
+      .pill {
+        font-size: 13px; font-weight: 800; letter-spacing: 0.3px;
+        padding: 8px 14px; border-radius: 999px;
+        background: var(--surface); border: 1px solid var(--border); color: var(--muted);
+      }
+      .cta { display: inline-flex; gap: 8px; align-items: center; margin-top: 30px; padding: 15px 26px;
+        border-radius: 14px; font-weight: 900; letter-spacing: 0.4px; color: #0f0f14; background: var(--grad); }
+      .cta:hover { opacity: 0.92; text-decoration: none; }
+
+      section { padding: 56px 0; border-top: 1px solid var(--border); }
+      .eyebrow { font-size: 12px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: var(--apricot); }
+      h2 { font-size: clamp(26px, 4vw, 38px); font-weight: 900; letter-spacing: -0.8px; margin: 8px 0 8px; }
+      .lead { color: var(--muted); font-size: 17px; max-width: 720px; }
+
+      .grid { display: grid; gap: 16px; margin-top: 28px; }
+      .cols-2 { grid-template-columns: repeat(2, 1fr); }
+      .cols-3 { grid-template-columns: repeat(3, 1fr); }
+      .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 22px; }
+      .card h3 { font-size: 17px; font-weight: 800; margin-bottom: 6px; }
+      .card p { color: var(--muted); font-size: 14.5px; }
+      .card .ico { font-size: 22px; margin-bottom: 10px; display: block; }
+
+      .ops { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 22px; }
+      .op { font-family: var(--mono); font-size: 13px; padding: 7px 12px; border-radius: 10px;
+        background: var(--surface-2); border: 1px solid var(--border); color: var(--text); }
+      .op b { color: var(--blue); }
+
+      .stack { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 24px; }
+      .stack div { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; font-size: 14px; color: var(--muted); }
+      .stack b { color: var(--text); }
+
+      /* quick start */
+      .steps { counter-reset: s; margin-top: 26px; display: grid; gap: 14px; }
+      .step { display: grid; grid-template-columns: 56px 1fr; gap: 18px; align-items: center;
+        background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 18px 20px; }
+      .step .n { width: 44px; height: 44px; border-radius: 12px; background: var(--grad); color: #0f0f14;
+        font-weight: 900; font-size: 20px; display: grid; place-items: center; }
+      .step h4 { font-size: 16px; font-weight: 800; }
+      .step p { color: var(--muted); font-size: 14px; }
+
+      .note { color: var(--dim); font-size: 13px; margin-top: 22px; line-height: 1.7; }
+      footer { padding: 40px 0 70px; border-top: 1px solid var(--border); color: var(--dim); font-size: 14px; text-align: center; }
+
+      @media (max-width: 720px) {
+        .cols-2, .cols-3, .stack { grid-template-columns: 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="glow"></div>
+      <div class="wrap">
+        <!-- Cast mark -->
+        <svg class="logo-mark" viewBox="0 0 96 96" fill="none" aria-label="Beam">
+          <defs>
+            <linearGradient id="g" x1="0" y1="96" x2="96" y2="0">
+              <stop offset="0" stop-color="#ffa24b" /><stop offset="1" stop-color="#2e9bff" />
+            </linearGradient>
+          </defs>
+          <rect width="96" height="96" rx="22" fill="#181820" />
+          <g stroke="url(#g)" stroke-width="7" stroke-linecap="round" fill="none">
+            <path d="M30 48 A18 18 0 0 1 48 66" />
+            <path d="M30 36 A30 30 0 0 1 60 66" />
+            <path d="M30 24 A42 42 0 0 1 72 66" />
+          </g>
+          <circle cx="30" cy="66" r="6.5" fill="url(#g)" />
+        </svg>
+        <h1>Beam<span class="grad-text">.</span></h1>
+        <p class="tagline">
+          Wireless hands &amp; eyes for AI agents on a real Android phone. <br />
+          <strong style="color: var(--text)">No ADB. No USB. No developer mode.</strong>
+        </p>
+        <div class="pills">
+          <span class="pill">📱 Android</span>
+          <span class="pill">🪟 Windows</span>
+          <span class="pill">🤖 MCP-ready</span>
+          <span class="pill">🔒 TLS</span>
+          <span class="pill">📡 Wi-Fi</span>
+        </div>
+        <a class="cta" href="https://github.com/LioMatthys/Beam/releases/latest">Download Beam ↓</a>
+      </div>
+    </header>
+
+    <section>
+      <div class="wrap">
+        <p class="eyebrow">What it is</p>
+        <h2>See and control a real phone <span class="grad-text">from your computer</span>.</h2>
+        <p class="lead">
+          Install one app, flip on Accessibility once, and your Android device is drivable from your
+          machine over Wi-Fi: read what's on screen, tap by element, type, swipe, scroll. The live
+          screen mirrors to your PC as the agent's eyes. Every other way to do this (Appium,
+          UIAutomator, Maestro, most "mobile-use" agent stacks) needs ADB, USB debugging, or an
+          emulator. Beam needs none of it.
+        </p>
+        <div class="grid cols-3">
+          <div class="card"><span class="ico">🧪</span><h3>Test on a real device</h3><p>Give your coding agent an actual phone to run and verify your app on, over Wi-Fi.</p></div>
+          <div class="card"><span class="ico">✅</span><h3>Mobile QA &amp; flows</h3><p>Record a session, replay it, get a pass/fail report. No ADB rig.</p></div>
+          <div class="card"><span class="ico">⚙️</span><h3>RPA &amp; automation</h3><p>Drive phone-only apps that have no public API, by element not pixels.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <p class="eyebrow">How it works</p>
+        <h2>One wire protocol, three actors.</h2>
+        <svg viewBox="0 0 900 260" style="width: 100%; margin-top: 26px" font-family="system-ui" font-size="15">
+          <defs>
+            <linearGradient id="b" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ffa24b"/><stop offset="1" stop-color="#2e9bff"/></linearGradient>
+            <marker id="arr" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#2e9bff"/></marker>
+          </defs>
+          <!-- phone -->
+          <rect x="40" y="60" width="150" height="140" rx="16" fill="#181820" stroke="#2a2a36"/>
+          <text x="115" y="50" fill="#f2f4f7" text-anchor="middle" font-weight="800">Android phone</text>
+          <text x="115" y="120" fill="#8a95a5" text-anchor="middle">MediaProjection</text>
+          <text x="115" y="145" fill="#8a95a5" text-anchor="middle">Accessibility</text>
+          <text x="115" y="170" fill="#ffa24b" text-anchor="middle" font-size="13">eyes + hands</text>
+          <!-- pc -->
+          <rect x="375" y="60" width="170" height="140" rx="16" fill="#181820" stroke="#2a2a36"/>
+          <text x="460" y="50" fill="#f2f4f7" text-anchor="middle" font-weight="800">Windows app</text>
+          <text x="460" y="120" fill="#8a95a5" text-anchor="middle">live screen (decode)</text>
+          <text x="460" y="145" fill="#8a95a5" text-anchor="middle">control relay :8788</text>
+          <!-- agent -->
+          <rect x="720" y="80" width="150" height="100" rx="16" fill="#181820" stroke="#2a2a36"/>
+          <text x="795" y="70" fill="#f2f4f7" text-anchor="middle" font-weight="800">AI agent</text>
+          <text x="795" y="125" fill="#8a95a5" text-anchor="middle">DroidPilot</text>
+          <text x="795" y="148" fill="#8a95a5" text-anchor="middle">(MCP)</text>
+          <!-- arrows -->
+          <line x1="195" y1="110" x2="370" y2="110" stroke="url(#b)" stroke-width="3" marker-end="url(#arr)"/>
+          <text x="282" y="100" fill="#8a95a5" text-anchor="middle" font-size="13">H.264 video →</text>
+          <line x1="370" y1="150" x2="195" y2="150" stroke="url(#b)" stroke-width="3" marker-end="url(#arr)"/>
+          <text x="282" y="172" fill="#8a95a5" text-anchor="middle" font-size="13">← control ops (TLS)</text>
+          <line x1="715" y1="130" x2="550" y2="130" stroke="url(#b)" stroke-width="3" marker-end="url(#arr)"/>
+          <text x="632" y="120" fill="#8a95a5" text-anchor="middle" font-size="13">JSON-RPC</text>
+        </svg>
+        <div class="ops">
+          <span class="op"><b>dump</b> read elements</span>
+          <span class="op"><b>tap_text</b> tap by label</span>
+          <span class="op"><b>type_text</b> fill fields</span>
+          <span class="op"><b>swipe</b> / <b>long_press</b></span>
+          <span class="op"><b>scroll_to_element</b></span>
+          <span class="op"><b>wait_for_text</b></span>
+          <span class="op"><b>screenshot</b> vision fallback</span>
+          <span class="op"><b>back</b> / <b>home</b></span>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <p class="eyebrow">Technology</p>
+        <h2>Built on hardware paths, not hacks.</h2>
+        <div class="stack">
+          <div><b>Android sender</b> — Expo / React Native UI + a Kotlin native module: MediaProjection + MediaCodec (hardware H.264), AccessibilityService for reading & input.</div>
+          <div><b>Windows receiver</b> — Electron + React + TypeScript. H.264 decode via the browser-native WebCodecs (hardware-accelerated) to a canvas.</div>
+          <div><b>Wire protocol</b> — TCP, length-prefixed multiplexed frames (video + control). Self-signed TLS via AndroidKeyStore with trust-on-first-use cert pinning.</div>
+          <div><b>Agent layer</b> — DroidPilot (Python) exposes the control ops as an MCP tool surface; record/replay flows with pass/fail reports.</div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <p class="eyebrow">Quick start</p>
+        <h2>Three one-time steps, then connect.</h2>
+        <div class="steps">
+          <div class="step"><div class="n">1</div><div><h4>Install the Windows app</h4><p>Grab <code>Beam-Setup.exe</code> (or the portable zip) from the releases page and run it.</p></div></div>
+          <div class="step"><div class="n">2</div><div><h4>Install the phone app &amp; enable Accessibility</h4><p>Scan the QR in the Windows app to install <code>Beam.apk</code>, then turn on <b>Settings → Accessibility → Beam control</b> once.</p></div></div>
+          <div class="step"><div class="n">3</div><div><h4>Connect</h4><p>Tap <b>Start sharing</b> on the phone, enter its IP + 6-digit code on the PC (or scan to pair). The live screen appears; it auto-reconnects.</p></div></div>
+          <div class="step"><div class="n">4</div><div><h4>(Optional) point an agent at it</h4><p>The Windows app serves a localhost JSON-RPC on <code>127.0.0.1:8788</code>. Connect your agent, or use DroidPilot as an MCP.</p></div></div>
+        </div>
+        <p class="note">
+          <strong style="color: var(--muted)">Honest limits.</strong> Beam is built for trusted Wi-Fi:
+          the link is TLS-encrypted with cert pinning, but it's LAN-only and the pairing code is the
+          authorizer (full PAKE + remote relay are roadmap). Distributed by sideload / MDM, since
+          Accessibility automation is restricted on the Play Store. Games and some WebView/canvas
+          surfaces expose a thin element tree — the <code>screenshot</code> op is the vision fallback there.
+        </p>
+      </div>
+    </section>
+
+    <footer>
+      <div class="wrap">
+        <p><strong class="grad-text" style="font-size: 18px">Beam</strong> · v1.0</p>
+        <p style="margin-top: 8px">
+          <a href="https://github.com/LioMatthys/Beam">GitHub</a> ·
+          <a href="https://github.com/LioMatthys/Beam/releases/latest">Download</a> ·
+          <a href="https://github.com/LioMatthys/Beam/blob/main/PROTOCOL.md">Protocol</a> ·
+          <a href="https://github.com/LioMatthys/Beam/blob/main/ROADMAP.md">Roadmap</a>
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>

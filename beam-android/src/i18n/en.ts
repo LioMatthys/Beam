@@ -14,6 +14,7 @@ export const en: Dict = {
     waitingHint: 'Keep this screen open. Capture starts when a PC connects.',
     liveTitle: 'A PC is watching your screen',
     liveHint: 'You can use your phone normally.',
+    sharingNow: 'Sharing',
     noWifi: 'Connect to a Wi-Fi network to share your screen.',
     settings: 'Settings',
     fps: 'fps',

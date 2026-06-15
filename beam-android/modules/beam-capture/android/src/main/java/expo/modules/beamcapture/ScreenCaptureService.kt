@@ -168,8 +168,8 @@ class ScreenCaptureService : Service() {
       rotation = params.rotation,
       fps = params.fps,
       codecProvider = { enc.codecString },
-      onClientChange = { count ->
-        BeamBus.status(if (count > 0) "streaming" else "waiting", count)
+      onClientChange = { count, secure ->
+        BeamBus.status(if (count > 0) "streaming" else "waiting", count, secure)
         // Start screen capture only while a PC is connected — so the red "recording"
         // indicator (and battery cost) appear only when actually sharing, not while waiting.
         statsHandler.post {

@@ -113,6 +113,7 @@ sending `tap`.
 | `physWidth`/`physHeight`/`rotation` | physical display, for mapping control taps |
 | `codec` | WebCodecs codec string |
 | `channels` | which channels this phone supports this session. Always includes `"video"`. Includes `"control"` **only when the AccessibilityService is enabled & bound.** |
+| `tlsPort` | present when the phone also accepts **TLS** on this port (= base port + 10). See Transport security. |
 
 The PC rejects/closes if `beam !== 2` or `codec` is missing. If `channels` lacks
 `"control"`, the PC runs **eyes-only** (cast works, no control) — graceful degrade for
@@ -125,10 +126,22 @@ devices where accessibility is off/revoked (e.g. Advanced Protection Mode).
   control request whose response was lost (ids are monotonic; ops idempotent by default).
 - *(v1 of control adds a session token in a `hello-ack` so reconnects skip the 6-digit code.)*
 
-## Security note
+## Transport security (TLS)
 
-The pairing code is a friendliness/safety check, **not** encryption — v2 traffic is
-plaintext on the LAN. The CONTROL channel injects input and reads the UI tree, i.e.
-remote control of the phone, so it is **LAN-only** and gated by a per-session on-phone
-consent toggle. **TLS + stronger pairing is a hard gate before CONTROL ever leaves a
-trusted LAN or rides a cloud relay.**
+The phone opens an **additive TLS listener** on `basePort + 10`, using a self-signed
+RSA cert generated once in the AndroidKeyStore (persisted across sessions). The plain
+listener on `basePort` stays open, so adding TLS never breaks connectivity.
+
+- **PC prefers TLS:** it connects to `basePort + 10` first; on any pre-handshake failure
+  (old phone, port closed) it falls back to the plain `basePort` for the session.
+- **Trust-on-first-use pinning:** on the first successful TLS handshake the PC pins the
+  cert's SHA-256 fingerprint (per `host:port`, stored in userData). A later mismatch is
+  refused as possible tampering; re-pairing clears the pin.
+- The 6-digit pairing code (sent **inside** TLS) still authorizes the PC.
+
+This closes the plaintext-on-the-LAN hole. Remaining hardening before CONTROL leaves a
+trusted LAN or rides a cloud relay: a proper PAKE (replace the shared code with a key
+exchange) and disabling the plain listener once all clients speak TLS.
+
+The CONTROL channel injects input and reads the UI tree (and screen), i.e. full remote
+control, so it stays **LAN-only** and gated by a per-session on-phone consent toggle.

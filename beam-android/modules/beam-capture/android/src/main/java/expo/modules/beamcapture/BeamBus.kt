@@ -6,11 +6,11 @@ package expo.modules.beamcapture
  * and clears them in OnDestroy.
  */
 object BeamBus {
-  @Volatile var onStatus: ((state: String, clients: Int) -> Unit)? = null
+  @Volatile var onStatus: ((state: String, clients: Int, secure: Boolean) -> Unit)? = null
   @Volatile var onStats: ((fps: Int, kbps: Int) -> Unit)? = null
   @Volatile var onError: ((message: String) -> Unit)? = null
 
-  fun status(state: String, clients: Int) = onStatus?.invoke(state, clients)
+  fun status(state: String, clients: Int, secure: Boolean = false) = onStatus?.invoke(state, clients, secure)
   fun stats(fps: Int, kbps: Int) = onStats?.invoke(fps, kbps)
   fun error(message: String) = onError?.invoke(message)
 

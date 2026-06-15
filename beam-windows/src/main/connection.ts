@@ -1,4 +1,8 @@
 import net from 'node:net'
+import tls from 'node:tls'
+import { readFileSync, writeFileSync } from 'node:fs'
+import { join } from 'node:path'
+import { app } from 'electron'
 import { FrameParser } from './frame-parser'
 import { Channel, HEADER_SIZE, parseHello } from '../shared/protocol'
 import type {
@@ -31,6 +35,10 @@ export class Connection {
   private desired = false
   private backoff = BACKOFF_MIN
   private reconnectTimer: NodeJS.Timeout | null = null
+  // 'auto' tries TLS (port+10) first; flips to 'plain' for the session if TLS isn't there.
+  private tlsMode: 'auto' | 'plain' = 'auto'
+  // Whether the current socket is encrypted (TLS) — surfaced to the UI as a badge.
+  private secure = false
 
   // Handshake state for the current socket.
   private gotHello = false
@@ -73,6 +81,7 @@ export class Connection {
     this.desired = true
     this.backoff = BACKOFF_MIN
     this.handshakeFails = 0
+    this.tlsMode = 'auto'
     this.openSocket()
   }
 
@@ -87,8 +96,13 @@ export class Connection {
     if (!this.opts) return
     this.resetHandshake()
     this.onStatus({ phase: this.backoff === BACKOFF_MIN ? 'connecting' : 'reconnecting' })
+    if (this.tlsMode === 'auto') this.openTls()
+    else this.openPlain()
+  }
 
-    const socket = net.createConnection({ host: this.opts.host, port: this.opts.port })
+  /** Plain TCP — the original path, unchanged. Also the fallback when TLS isn't available. */
+  private openPlain(): void {
+    const socket = net.createConnection({ host: this.opts!.host, port: this.opts!.port })
     this.socket = socket
     socket.setNoDelay(true)
     // Detect a dead/stalled link (phone dropped abruptly, network blip, out of range)
@@ -97,12 +111,65 @@ export class Connection {
     socket.setKeepAlive(true, 5000)
 
     socket.on('connect', () => {
+      this.secure = false
       this.backoff = BACKOFF_MIN
       this.onStatus({ phase: 'handshaking' })
     })
     socket.on('data', (chunk) => this.onData(chunk))
     socket.on('error', (err) => this.onSocketError(err))
     socket.on('close', () => this.onSocketClose())
+  }
+
+  /** Try TLS on the phone's tlsPort (port+10). On any pre-handshake failure, fall back to
+   *  plain for the rest of the session — so adding TLS can never break connectivity. On a
+   *  successful handshake, pin the cert (trust-on-first-use) and verify it on later connects. */
+  private openTls(): void {
+    const host = this.opts!.host
+    const port = this.opts!.port
+    const socket = tls.connect({ host, port: port + 10, rejectUnauthorized: false, timeout: 4000 })
+    this.socket = socket
+    let secured = false
+    const fallbackToPlain = (): void => {
+      if (secured) return
+      this.tlsMode = 'plain'
+      try {
+        socket.removeAllListeners()
+        socket.destroy()
+      } catch {
+        /* noop */
+      }
+      this.socket = null
+      this.openPlain()
+    }
+    socket.setNoDelay(true)
+    socket.setKeepAlive(true, 5000)
+    socket.once('secureConnect', () => {
+      secured = true
+      this.secure = true
+      socket.setTimeout(0)
+      const fp = socket.getPeerCertificate()?.fingerprint256 ?? ''
+      const key = `${host}:${port}`
+      const pins = this.loadPins()
+      if (pins[key] && fp && pins[key] !== fp) {
+        this.fail(
+          "The phone's security certificate changed — refusing to connect (possible tampering). " +
+            'Forget this device and pair again to trust the new certificate.'
+        )
+        return
+      }
+      if (!pins[key] && fp) this.savePin(key, fp)
+      this.backoff = BACKOFF_MIN
+      this.onStatus({ phase: 'handshaking' })
+    })
+    socket.on('timeout', fallbackToPlain)
+    socket.on('data', (chunk) => this.onData(chunk))
+    socket.on('error', (err) => {
+      if (secured) this.onSocketError(err)
+      else fallbackToPlain()
+    })
+    socket.on('close', () => {
+      if (secured) this.onSocketClose()
+    })
   }
 
   private onData(chunk: Buffer): void {
@@ -119,7 +186,7 @@ export class Connection {
             this.fail((err as Error).message)
             return
           }
-          this.onStatus({ phase: 'streaming', hello: this.hello })
+          this.onStatus({ phase: 'streaming', hello: this.hello, secure: this.secure })
           this.sendCode()
           // Any bytes after the newline are the start of the frame stream.
           const rest = chunk.subarray(i + 1)
@@ -221,6 +288,41 @@ export class Connection {
     this.gotFrame = false
     this.helloBuf = []
     this.hello = null
+  }
+
+  // --- TOFU cert pinning (per host:port), stored in userData ---
+  private pinsFile(): string {
+    return join(app.getPath('userData'), 'beam-cert-pins.json')
+  }
+
+  private loadPins(): Record<string, string> {
+    try {
+      return JSON.parse(readFileSync(this.pinsFile(), 'utf8')) as Record<string, string>
+    } catch {
+      return {}
+    }
+  }
+
+  private savePin(key: string, fingerprint: string): void {
+    const pins = this.loadPins()
+    pins[key] = fingerprint
+    try {
+      writeFileSync(this.pinsFile(), JSON.stringify(pins, null, 2))
+    } catch {
+      /* best-effort; pinning is a hardening layer, not required for the link */
+    }
+  }
+
+  /** Drop the pinned cert for a host:port so the next connect re-pins (used when the
+   *  user knowingly re-pairs a phone whose cert changed, e.g. after a reinstall). */
+  clearPin(host: string, port: number): void {
+    const pins = this.loadPins()
+    delete pins[`${host}:${port}`]
+    try {
+      writeFileSync(this.pinsFile(), JSON.stringify(pins, null, 2))
+    } catch {
+      /* noop */
+    }
   }
 
   private teardownSocket(): void {
