@@ -1,6 +1,7 @@
 import { app, shell, BrowserWindow, ipcMain, MessageChannelMain } from 'electron'
 import { join } from 'node:path'
 import { networkInterfaces } from 'node:os'
+import { createSocket } from 'node:dgram'
 import { execFile } from 'node:child_process'
 import { Connection } from './connection'
 import { ControlRelay } from './control-relay'
@@ -9,15 +10,46 @@ import type { MessagePortMain } from 'electron'
 import type { ConnectOptions, ConnectionStatus } from '../shared/protocol'
 import type { NetInfo } from '../shared/api'
 
-/** This PC's primary LAN IPv4 (first non-internal IPv4 address). */
-function localIpv4(): string {
-  const ifaces = networkInterfaces()
-  for (const addrs of Object.values(ifaces)) {
+/** Fallback scan: prefer real home-LAN ranges over 172.* (often WSL/Hyper-V/Docker). */
+function ipFromInterfaces(): string {
+  const all: string[] = []
+  for (const addrs of Object.values(networkInterfaces())) {
     for (const a of addrs ?? []) {
-      if (a.family === 'IPv4' && !a.internal) return a.address
+      if (a.family === 'IPv4' && !a.internal) all.push(a.address)
     }
   }
-  return ''
+  return all.find((ip) => ip.startsWith('192.168.') || ip.startsWith('10.')) ?? all[0] ?? ''
+}
+
+/** This PC's LAN IPv4 — the address of the interface that actually routes off-machine
+ * (the default route), so we don't pick a WSL/Hyper-V virtual adapter. No packets sent:
+ * a UDP `connect` only selects the source interface. */
+function localIpv4(): Promise<string> {
+  return new Promise((resolve) => {
+    const sock = createSocket('udp4')
+    const fallback = (): void => {
+      try {
+        sock.close()
+      } catch {
+        /* noop */
+      }
+      resolve(ipFromInterfaces())
+    }
+    sock.once('error', fallback)
+    try {
+      sock.connect(53, '8.8.8.8', () => {
+        try {
+          const addr = sock.address().address
+          sock.close()
+          resolve(addr && addr !== '0.0.0.0' ? addr : ipFromInterfaces())
+        } catch {
+          fallback()
+        }
+      })
+    } catch {
+      fallback()
+    }
+  })
 }
 
 /** Connected Wi-Fi SSID via `netsh` (empty if not on Wi-Fi or unavailable). */
@@ -139,7 +171,7 @@ ipcMain.handle('beam:control', (_e, msg: { op: string; args?: Record<string, unk
 })
 
 ipcMain.handle('beam:netinfo', async (): Promise<NetInfo> => {
-  return { ip: localIpv4(), ssid: await wifiSsid() }
+  return { ip: await localIpv4(), ssid: await wifiSsid() }
 })
 
 ipcMain.handle('android:detect', () => detectDevice())
