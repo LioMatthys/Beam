@@ -80,8 +80,14 @@ The op names match DroidPilot's tool surface so the laptop agent maps 1:1.
 | op | args | result |
 |---|---|---|
 | `screen_size` | — | `{"width":W,"height":H}` (physical px) |
-| `tap` | `{"x":int,"y":int}` | `null` (physical px) |
-| *(v1 of control adds:)* `tap_text`,`type_text`,`swipe`,`press_key`,`screen`,`screenshot`,`wait_for_text`,`assert_text`,`launch_app` | | |
+| `tap` | `{"x":int,"y":int}` | `null` |
+| `swipe` | `{"x1","y1","x2","y2","durationMs"?}` | `null` |
+| `back` / `home` | — | `null` (global navigation) |
+| `dump` | — | `{"nodes":[{"text"?,"desc"?,"cls","id"?,"clickable","scrollable"?,"bounds":[l,t,r,b]}, …]}` — visible elements via the accessibility tree; `bounds` in physical px |
+| `tap_text` | `{"text":str,"exact"?:bool}` | `{"tapped":true,"x","y"}`, or an error if no element matches |
+
+`dump` + `tap_text` let the agent navigate **by element** (read the screen, tap by text)
+instead of guessing pixels — all over the same control channel, no adb.
 
 **Coordinates are physical device pixels** (`0..physWidth`, `0..physHeight`). The PC maps
 a canvas/video click → physical px using HELLO's `physWidth/physHeight/rotation` before
