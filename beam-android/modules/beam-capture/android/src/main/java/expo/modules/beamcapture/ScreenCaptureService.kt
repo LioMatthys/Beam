@@ -167,6 +167,7 @@ class ScreenCaptureService : Service() {
       fps = params.fps,
       codecProvider = { enc.codecString },
       onClientChange = { count -> BeamBus.status(if (count > 0) "streaming" else "waiting", count) },
+      onClientConnected = { ip -> notifyClientConnected(ip) },
       onError = { msg -> BeamBus.error(msg) },
       onClientReady = {
         srvLastConfigResend()
@@ -259,6 +260,32 @@ class ScreenCaptureService : Service() {
     }
   }
 
+  /** A separate, dismissible heads-up notification when a PC pairs/connects. Best-effort:
+   *  on Android 13+ it only shows if the user has granted notification permission. */
+  private fun notifyClientConnected(ip: String) {
+    try {
+      val channelId = "beam_events"
+      val nm = getSystemService(NotificationManager::class.java)
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        val channel =
+          NotificationChannel(channelId, "Beam connections", NotificationManager.IMPORTANCE_DEFAULT)
+        nm.createNotificationChannel(channel)
+      }
+      val text = if (ip.isNotEmpty()) "A computer connected · $ip" else "A computer connected"
+      val notif = NotificationCompat.Builder(this, channelId)
+        .setContentTitle("Beam")
+        .setContentText(text)
+        .setSmallIcon(android.R.drawable.ic_menu_view)
+        .setAutoCancel(true)
+        .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+        .setTimeoutAfter(10_000)
+        .build()
+      nm.notify(NOTIF_EVENT_ID, notif)
+    } catch (_: Exception) {
+      // best-effort; never let a notification failure affect the stream
+    }
+  }
+
   private fun startForegroundNotification() {
     val channelId = "beam_capture"
     val nm = getSystemService(NotificationManager::class.java)
@@ -268,7 +295,7 @@ class ScreenCaptureService : Service() {
     }
     val notification: Notification = NotificationCompat.Builder(this, channelId)
       .setContentTitle("Beam")
-      .setContentText("Partage de l'écran en cours")
+      .setContentText("Sharing your screen")
       .setSmallIcon(android.R.drawable.ic_menu_view)
       .setOngoing(true)
       .build()
@@ -342,6 +369,7 @@ class ScreenCaptureService : Service() {
       private set
 
     private const val NOTIF_ID = 4242
+    private const val NOTIF_EVENT_ID = 4243
     private const val ACTION_STOP = "expo.modules.beamcapture.STOP"
     private const val EXTRA_RESULT_CODE = "resultCode"
     private const val EXTRA_DATA = "data"

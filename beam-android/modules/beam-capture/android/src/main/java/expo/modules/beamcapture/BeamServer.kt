@@ -25,6 +25,7 @@ class BeamServer(
   private val fps: Int,
   private val codecProvider: () -> String,
   private val onClientChange: (Int) -> Unit,
+  private val onClientConnected: (String) -> Unit,
   private val onError: (String) -> Unit,
   private val onClientReady: () -> Unit
 ) {
@@ -94,6 +95,7 @@ class BeamServer(
         out = os
       }
       onClientChange(1)
+      onClientConnected(socket.inetAddress?.hostAddress ?: "")
       onClientReady()
 
       controlReadLoop(input) // returns when the client disconnects
