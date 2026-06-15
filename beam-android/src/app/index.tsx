@@ -45,7 +45,12 @@ export default function ConnectScreen() {
           <Image source={require('@/assets/images/logo-mark.png')} style={styles.logo} />
           <Text style={styles.wordmark}>Beam</Text>
         </View>
-        <Pressable onPress={() => router.push('/settings')} hitSlop={12} style={styles.gearBtn}>
+        <Pressable
+          onPress={() => router.push('/settings')}
+          hitSlop={12}
+          accessibilityRole="button"
+          accessibilityLabel="Settings"
+          style={styles.gearBtn}>
           <Image source={require('@/assets/images/gear.png')} style={styles.gearIcon} />
         </Pressable>
       </View>
