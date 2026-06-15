@@ -1,13 +1,14 @@
 import { useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { GradientButton } from '@/components/gradient-button';
 import { StatusPill } from '@/components/status-pill';
 import { Colors } from '@/constants/theme';
-import { BeamCapture } from '@/data/beam-capture';
 import { useConnection } from '@/data/connection-context';
+import { useConnectionDisplay } from '@/data/useConnectionDisplay';
+import { useLocalNetwork } from '@/data/useLocalNetwork';
 import { useT } from '@/i18n';
 
 const c = Colors.dark;
@@ -17,26 +18,8 @@ export default function ConnectScreen() {
   const router = useRouter();
   const { t } = useT();
   const { state, info, stats, error, start, stop } = useConnection();
-
-  const [wifiIp, setWifiIp] = useState('');
-  useEffect(() => {
-    try {
-      setWifiIp(BeamCapture ? BeamCapture.getIpAddress() : '');
-    } catch {
-      setWifiIp('');
-    }
-  }, [state]);
-
-  // 'starting' stays on the idle view (the Start button shows a spinner) until the
-  // service reports 'waiting' and we switch to the connection card.
-  const sharing = state === 'waiting' || state === 'streaming';
-
-  const statusLabel =
-    state === 'streaming'
-      ? t('connect', 'liveTitle')
-      : sharing
-        ? t('connect', 'waitingTitle')
-        : t('connect', 'tagline');
+  const localNetworkIp = useLocalNetwork();
+  const display = useConnectionDisplay(state);
 
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
@@ -59,24 +42,24 @@ export default function ConnectScreen() {
       <View style={styles.statusRow}>
         <StatusPill state={state} />
         <Text style={styles.statusText} numberOfLines={2}>
-          {statusLabel}
+          {display.title}
         </Text>
       </View>
 
       <ScrollView
         contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 24 }]}
         showsVerticalScrollIndicator={false}>
-        {!sharing ? (
+        {!display.isSharing ? (
           <View style={styles.heroIdle}>
             <GradientButton label={t('connect', 'start')} onPress={start} loading={state === 'starting'} />
-            {!wifiIp && <Text style={styles.warn}>{t('connect', 'noWifi')}</Text>}
+            {!localNetworkIp && <Text style={styles.warn}>{t('connect', 'noWifi')}</Text>}
             {error && <Text style={styles.error}>{error}</Text>}
           </View>
         ) : (
           <View>
             <View style={styles.card}>
               <Text style={styles.cardCaption}>{t('connect', 'instructions')}</Text>
-              <InfoRow label={t('connect', 'ip')} value={info?.ip ?? wifiIp ?? '—'} />
+              <InfoRow label={t('connect', 'ip')} value={info?.ip ?? localNetworkIp ?? '—'} />
               <InfoRow label={t('connect', 'port')} value={String(info?.port ?? 8787)} />
               <View style={styles.divider} />
               <Text style={styles.codeLabel}>{t('connect', 'code')}</Text>

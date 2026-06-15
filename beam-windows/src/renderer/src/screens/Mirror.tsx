@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { BeamDecoder } from '../decoder'
 import { StatusPill } from '../components/StatusPill'
+import { useNetworkInfo } from '../hooks/useNetworkInfo'
+import { useNetworkStatus } from '../hooks/useNetworkStatus'
 import type { ConnectionStatus } from '../../../shared/protocol'
 
 interface Props {
@@ -18,17 +20,8 @@ export function Mirror({ status, port, host, onDisconnect }: Props): React.JSX.E
   const [fps, setFps] = useState(0)
   const [decErr, setDecErr] = useState<string | undefined>()
   const [stretch, setStretch] = useState(false)
-  const [pcNet, setPcNet] = useState({ ip: '', ssid: '' })
-
-  useEffect(() => {
-    void window.beam.netInfo().then(setPcNet)
-  }, [])
-
-  // Compare the /16 prefix (192.168.*) rather than /24: some routers put devices on
-  // adjacent /24s (e.g. .220 vs .221) of one wider network, where /24 would falsely
-  // read "different". This is just an advisory hint; the real check is whether it connects.
-  const netPrefix = (ip: string): string => ip.split('.').slice(0, 2).join('.')
-  const sameSubnet = !!host && !!pcNet.ip && netPrefix(host) === netPrefix(pcNet.ip)
+  const pcNet = useNetworkInfo()
+  const netStatus = useNetworkStatus(host, pcNet)
 
   // Persistent frame-channel handler: routes incoming frames to whatever decoder
   // is currently active. Decoupled from decoder lifetime so reconnects are seamless.
@@ -160,11 +153,11 @@ export function Mirror({ status, port, host, onDisconnect }: Props): React.JSX.E
                       ? `Connecting to ${host}…`
                       : 'Connecting to phone…'}
             </div>
-            {host && (
+            {netStatus && (
               <div className="hint" style={{ marginTop: 10 }}>
-                Phone {host}
-                {pcNet.ip ? ` · this PC ${pcNet.ip}${pcNet.ssid ? ` (${pcNet.ssid})` : ''}` : ''}
-                {pcNet.ip ? (sameSubnet ? '  ·  same network ✓' : '  ·  different network — check Wi-Fi') : ''}
+                Phone {netStatus.phoneIp}
+                {netStatus.pcIp ? ` · this PC ${netStatus.pcIp}${netStatus.ssid ? ` (${netStatus.ssid})` : ''}` : ''}
+                {netStatus.pcIp ? `  ·  ${netStatus.statusText}` : ''}
               </div>
             )}
           </div>
