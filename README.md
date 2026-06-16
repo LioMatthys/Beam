@@ -82,10 +82,11 @@ Android app"** in the Windows app for the same QR.
 
 ## Quick start (the whole workflow)
 
-1. **Install the Windows app:**
-   [Beam-Setup.exe](https://github.com/LioMatthys/Beam/releases/latest/download/Beam-Setup.exe)
-   (or the portable
-   [zip](https://github.com/LioMatthys/Beam/releases/latest/download/Beam-windows-x64.zip)).
+1. **Install the desktop app:**
+   **Windows** — [Beam-Setup.exe](https://github.com/LioMatthys/Beam/releases/latest/download/Beam-Setup.exe)
+   (or the portable [zip](https://github.com/LioMatthys/Beam/releases/latest/download/Beam-windows-x64.zip)).
+   **Linux** — [AppImage](https://github.com/LioMatthys/Beam/releases/latest/download/Beam-linux-x86_64.AppImage)
+   (universal) or [.deb](https://github.com/LioMatthys/Beam/releases/latest/download/Beam-linux-amd64.deb) (Debian/Ubuntu).
 2. **Install the phone app** (QR above) and, once, enable
    **Settings → Accessibility → Beam control → On**. (Sideloaded? If the toggle is greyed out:
    **Settings → Apps → Beam → ⋮ → Allow restricted settings** first.)
