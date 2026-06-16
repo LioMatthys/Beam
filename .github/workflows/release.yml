@@ -1,0 +1,79 @@
+name: Release desktop apps
+
+# Builds the Beam desktop receiver for Windows AND Linux. On a version tag (e.g. v1.0.2)
+# the artifacts are attached to that GitHub release; a manual run just uploads them as
+# downloadable CI artifacts (handy for testing the Linux build).
+# (The Android APK is built separately on EAS.)
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: beam-windows
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install
+      - name: Build Windows installer + portable
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+        run: npm run package
+      - name: Zip portable build
+        shell: pwsh
+        run: |
+          Rename-Item dist/win-unpacked Beam
+          Compress-Archive -Path dist/Beam -DestinationPath dist/Beam-windows-x64.zip -Force
+      - uses: actions/upload-artifact@v4
+        with:
+          name: beam-windows
+          path: |
+            beam-windows/dist/Beam-Setup.exe
+            beam-windows/dist/Beam-windows-x64.zip
+      - name: Attach to release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            beam-windows/dist/Beam-Setup.exe
+            beam-windows/dist/Beam-windows-x64.zip
+
+  linux:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: beam-windows
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install
+      - name: Build Linux AppImage + deb
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+        run: npm run package:linux
+      - uses: actions/upload-artifact@v4
+        with:
+          name: beam-linux
+          path: |
+            beam-windows/dist/Beam-linux-x86_64.AppImage
+            beam-windows/dist/Beam-linux-amd64.deb
+      - name: Attach to release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            beam-windows/dist/Beam-linux-x86_64.AppImage
+            beam-windows/dist/Beam-linux-amd64.deb

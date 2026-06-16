@@ -52,16 +52,33 @@ function localIpv4(): Promise<string> {
   })
 }
 
-/** Connected Wi-Fi SSID via `netsh` (empty if not on Wi-Fi or unavailable). */
-function wifiSsid(): Promise<string> {
+/** Run a command and resolve its stdout, or '' on any error. */
+function execText(cmd: string, args: string[]): Promise<string> {
   return new Promise((resolve) => {
-    execFile('netsh', ['wlan', 'show', 'interfaces'], { windowsHide: true }, (err, stdout) => {
-      if (err || !stdout) return resolve('')
-      // Match a line "SSID : Name" but not "BSSID".
-      const m = stdout.split(/\r?\n/).find((l) => /^\s*SSID\s*:/.test(l))
-      resolve(m ? m.split(':').slice(1).join(':').trim() : '')
-    })
+    execFile(cmd, args, { windowsHide: true }, (err, stdout) => resolve(err || !stdout ? '' : stdout))
   })
+}
+
+/** Connected Wi-Fi SSID (empty if not on Wi-Fi or unavailable). Cross-platform:
+ *  Windows uses `netsh`, Linux uses `iwgetid` then `nmcli`. */
+function wifiSsid(): Promise<string> {
+  if (process.platform === 'win32') {
+    return execText('netsh', ['wlan', 'show', 'interfaces']).then((out) => {
+      // Match a line "SSID : Name" but not "BSSID".
+      const m = out.split(/\r?\n/).find((l) => /^\s*SSID\s*:/.test(l))
+      return m ? m.split(':').slice(1).join(':').trim() : ''
+    })
+  }
+  if (process.platform === 'linux') {
+    return execText('iwgetid', ['-r']).then(async (ssid) => {
+      if (ssid.trim()) return ssid.trim()
+      // Fallback: the active Wi-Fi line from nmcli ("yes:MyNetwork").
+      const out = await execText('nmcli', ['-t', '-f', 'active,ssid', 'dev', 'wifi'])
+      const line = out.split(/\r?\n/).find((l) => l.startsWith('yes:'))
+      return line ? line.slice(4).trim() : ''
+    })
+  }
+  return Promise.resolve('')
 }
 
 let mainWindow: BrowserWindow | null = null
