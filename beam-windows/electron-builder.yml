@@ -23,6 +23,7 @@ win:
 linux:
   icon: build-assets/icon.png
   category: Utility
+  maintainer: Overture Life <hello@overture.life>
   synopsis: Wireless screen mirroring & control for Android, from your desktop.
   target:
     - target: AppImage

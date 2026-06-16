@@ -3,7 +3,8 @@
   "version": "1.0.1",
   "description": "Beam — Windows receiver. Displays a phone screen streamed over Wi-Fi.",
   "main": "./out/main/index.js",
-  "author": "",
+  "author": "Overture Life",
+  "homepage": "https://github.com/LioMatthys/Beam",
   "license": "MIT",
   "scripts": {
     "dev": "electron-vite dev",
