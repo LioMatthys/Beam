@@ -3,6 +3,7 @@ import { GradientButton } from '../components/GradientButton'
 import { DEFAULT_PORT } from '../../../shared/protocol'
 import type { ConnectOptions } from '../../../shared/protocol'
 import { loadRecents } from '../connect-store'
+import { AGENT_PROMPT } from '../../../shared/agent-prompt'
 import { QRCodeSVG } from 'qrcode.react'
 import logo from '../assets/logo.png'
 
@@ -25,6 +26,7 @@ export function Connect({ onConnect, error }: Props): React.JSX.Element {
   const [installing, setInstalling] = useState(false)
   const [showQr, setShowQr] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [copied, setCopied] = useState(false)
   const [pcNet, setPcNet] = useState({ ip: '', ssid: '' })
 
   useEffect(() => {
@@ -41,6 +43,12 @@ export function Connect({ onConnect, error }: Props): React.JSX.Element {
     off()
     setInstalling(false)
     if (!r.ok) setInstallMsg(`⚠ ${r.error}`)
+  }
+
+  const copyAgentPrompt = async (): Promise<void> => {
+    await window.beam.copyText(AGENT_PROMPT)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 1800)
   }
 
   const portNum = Number(port)
@@ -99,6 +107,16 @@ export function Connect({ onConnect, error }: Props): React.JSX.Element {
                 {installMsg}
               </div>
             )}
+
+            <div style={{ height: 1, background: 'var(--border)', margin: '14px 0' }} />
+            <label className="field-label">AI agent</label>
+            <p className="hint" style={{ margin: '6px 0 10px' }}>
+              Copy a ready-made prompt that teaches an AI agent to read and drive the phone
+              over Beam.
+            </p>
+            <button className="tbtn" style={{ width: '100%' }} onClick={copyAgentPrompt}>
+              {copied ? '✓ Copied!' : 'Copy instruction for agent'}
+            </button>
           </div>
         </>
       )}

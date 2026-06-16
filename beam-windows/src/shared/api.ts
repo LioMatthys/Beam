@@ -40,6 +40,9 @@ export interface BeamApi {
   /** This PC's LAN network info, for the same-network sanity check on the connect screen. */
   netInfo(): Promise<NetInfo>
 
+  /** Copy text to the system clipboard (e.g. the agent instruction prompt). */
+  copyText(text: string): Promise<void>
+
   /** One-click install of the Android app over USB (adb). */
   android: {
     detect(): Promise<DeviceInfo>

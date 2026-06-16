@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow, ipcMain, MessageChannelMain } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, MessageChannelMain, clipboard } from 'electron'
 import { join } from 'node:path'
 import { networkInterfaces } from 'node:os'
 import { createSocket } from 'node:dgram'
@@ -172,6 +172,10 @@ ipcMain.handle('beam:control', (_e, msg: { op: string; args?: Record<string, unk
 
 ipcMain.handle('beam:netinfo', async (): Promise<NetInfo> => {
   return { ip: await localIpv4(), ssid: await wifiSsid() }
+})
+
+ipcMain.handle('beam:copy', (_e, text: string) => {
+  clipboard.writeText(text)
 })
 
 ipcMain.handle('android:detect', () => detectDevice())
