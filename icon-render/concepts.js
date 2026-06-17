@@ -6,11 +6,13 @@ const OUT = path.join(__dirname, 'out')
 fs.mkdirSync(OUT, { recursive: true })
 const BG = '#0F0F14'
 const APR = '#FFA24B'
+const PUR = '#B24BE6'
 const BLU = '#2E9BFF'
 
 function grad(ctx, x0, y0, x1, y1) {
   const g = ctx.createLinearGradient(x0, y0, x1, y1)
   g.addColorStop(0, APR)
+  g.addColorStop(0.5, PUR)
   g.addColorStop(1, BLU)
   return g
 }

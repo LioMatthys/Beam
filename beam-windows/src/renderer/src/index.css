@@ -10,10 +10,11 @@
   --accent: #2e9bff;
   --accent-dim: #1e7fe0;
   --teal: #ffa24b;
+  --purple: #b24be6;
   --danger: #ff5a5f;
   --warning: #ffb347;
   --success: #34d399;
-  --gradient: linear-gradient(135deg, #ffa24b 0%, #2e9bff 100%);
+  --gradient: linear-gradient(135deg, #ffa24b 0%, #b24be6 50%, #2e9bff 100%);
   --font: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   --mono: 'Cascadia Code', 'Consolas', 'SFMono-Regular', Menlo, monospace;
 }

@@ -7,6 +7,7 @@ fs.mkdirSync(OUT, { recursive: true })
 
 const BG = '#0F0F14'
 const LIME = '#FFA24B' // apricot orange (gradient start)
+const PURPLE = '#B24BE6' // purple (gradient middle — keeps it saturated, not grey)
 const TEAL = '#2E9BFF' // flashy blue (gradient end)
 let MONO = false
 
@@ -14,6 +15,7 @@ function gd(ctx, x0, y0, x1, y1) {
   if (MONO) return '#FFFFFF'
   const g = ctx.createLinearGradient(x0, y0, x1, y1)
   g.addColorStop(0, LIME)
+  g.addColorStop(0.5, PURPLE)
   g.addColorStop(1, TEAL)
   return g
 }
@@ -204,6 +206,7 @@ p.drawImage(roundedIcon(220), 120, 30)
 p.drawImage(roundedIcon(56), 202, 270)
 const wg = p.createLinearGradient(W / 2 - 80, 0, W / 2 + 80, 0)
 wg.addColorStop(0, LIME)
+wg.addColorStop(0.5, PURPLE)
 wg.addColorStop(1, TEAL)
 p.fillStyle = wg
 p.font = '900 30px system-ui, sans-serif'

@@ -18,15 +18,16 @@ const palette = {
   accentSurface: 'rgba(46, 155, 255, 0.12)',
   teal: '#FFA24B',
   tealSurface: 'rgba(255, 162, 75, 0.12)',
+  purple: '#B24BE6',
   danger: '#FF5A5F',
   dangerSurface: 'rgba(255, 90, 95, 0.12)',
   warning: '#FFB347',
   success: '#34D399',
 };
 
-/** Signature apricot → flashy-blue gradient. Use for primary CTAs and brand accents. */
+/** Signature apricot → purple → flashy-blue gradient. Use for primary CTAs and brand accents. */
 export const BrandGradient = {
-  colors: ['#FFA24B', '#2E9BFF'] as const,
+  colors: ['#FFA24B', '#B24BE6', '#2E9BFF'] as const,
   start: { x: 0, y: 0 },
   end: { x: 1, y: 1 },
 };
