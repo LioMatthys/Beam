@@ -3,6 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="icon.png" />
     <title>Beam — wireless hands & eyes for AI agents on Android</title>
     <meta
       name="description"
@@ -97,11 +98,19 @@
       .step h4 { font-size: 16px; font-weight: 800; }
       .step p { color: var(--muted); font-size: 14px; }
 
+      .howsteps { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 18px; }
+      .howsteps figure {
+        background: var(--surface-2); border: 1px solid var(--border);
+        border-radius: 14px; padding: 16px 14px; text-align: center;
+      }
+      .howsteps svg { width: 150px; height: auto; }
+      .howsteps figcaption { color: var(--muted); font-size: 13px; margin-top: 12px; line-height: 1.5; }
+
       .note { color: var(--dim); font-size: 13px; margin-top: 22px; line-height: 1.7; }
       footer { padding: 40px 0 70px; border-top: 1px solid var(--border); color: var(--dim); font-size: 14px; text-align: center; }
 
       @media (max-width: 720px) {
-        .cols-2, .cols-3, .stack { grid-template-columns: 1fr; }
+        .cols-2, .cols-3, .stack, .howsteps { grid-template-columns: 1fr; }
       }
     </style>
   </head>
@@ -109,21 +118,7 @@
     <header>
       <div class="glow"></div>
       <div class="wrap">
-        <!-- Cast mark -->
-        <svg class="logo-mark" viewBox="0 0 96 96" fill="none" aria-label="Beam">
-          <defs>
-            <linearGradient id="g" x1="0" y1="96" x2="96" y2="0">
-              <stop offset="0" stop-color="#ffa24b" /><stop offset="1" stop-color="#2e9bff" />
-            </linearGradient>
-          </defs>
-          <rect width="96" height="96" rx="22" fill="#181820" />
-          <g stroke="url(#g)" stroke-width="7" stroke-linecap="round" fill="none">
-            <path d="M30 48 A18 18 0 0 1 48 66" />
-            <path d="M30 36 A30 30 0 0 1 60 66" />
-            <path d="M30 24 A42 42 0 0 1 72 66" />
-          </g>
-          <circle cx="30" cy="66" r="6.5" fill="url(#g)" />
-        </svg>
+        <img class="logo-mark" src="icon.png" alt="Beam" />
         <h1>Beam<span class="grad-text">.</span></h1>
         <p class="tagline">
           Wireless hands &amp; eyes for AI agents on a real Android phone. <br />
@@ -241,6 +236,48 @@
           <div class="step"><div class="n">3</div><div><h4>Connect</h4><p>Tap <b>Start sharing</b> on the phone, enter its IP + 6-digit code on the PC (or scan to pair). The live screen appears; it auto-reconnects.</p></div></div>
           <div class="step"><div class="n">4</div><div><h4>(Optional) point an agent at it</h4><p>The Windows app serves a localhost JSON-RPC on <code>127.0.0.1:8788</code>. Connect your agent, or use DroidPilot as an MCP.</p></div></div>
         </div>
+
+        <div class="card" style="margin-top: 22px">
+          <h3 style="font-size: 17px; font-weight: 800; margin-bottom: 6px">Enabling control (one-time)</h3>
+          <p style="color: var(--muted); font-size: 14.5px">
+            Casting needs nothing extra. To let the desktop (or an AI agent)
+            <b style="color: var(--text)">control</b> the phone, switch on Beam's Accessibility service once.
+            Because Beam is sideloaded, Android hides the toggle for security at first — here's the 2-step unlock:
+          </p>
+          <div class="howsteps">
+            <figure>
+              <svg viewBox="0 0 160 250" xmlns="http://www.w3.org/2000/svg" aria-label="Allow restricted settings">
+                <rect x="22" y="6" width="116" height="238" rx="18" fill="#0f0f14" stroke="#2a2a36" stroke-width="2" />
+                <text x="38" y="32" fill="#8a95a5" font-family="system-ui" font-size="11">Apps › Beam</text>
+                <text x="116" y="35" fill="#f2f4f7" font-family="system-ui" font-size="19" font-weight="700">⋮</text>
+                <line x1="34" y1="44" x2="126" y2="44" stroke="#2a2a36" />
+                <rect x="50" y="56" width="80" height="72" rx="9" fill="#22222d" stroke="#363645" stroke-width="1.5" />
+                <text x="60" y="79" fill="#8a95a5" font-family="system-ui" font-size="10">App info</text>
+                <line x1="58" y1="90" x2="122" y2="90" stroke="#2a2a36" />
+                <rect x="53" y="96" width="74" height="26" rx="6" fill="rgba(46,155,255,0.18)" />
+                <text x="60" y="108" fill="#2e9bff" font-family="system-ui" font-size="9.5" font-weight="700">Allow restricted</text>
+                <text x="60" y="118" fill="#2e9bff" font-family="system-ui" font-size="9.5" font-weight="700">settings</text>
+              </svg>
+              <figcaption>1 · Settings → Apps → Beam → ⋮ → <b style="color: var(--text)">Allow restricted settings</b></figcaption>
+            </figure>
+            <figure>
+              <svg viewBox="0 0 160 250" xmlns="http://www.w3.org/2000/svg" aria-label="Turn on Beam control">
+                <rect x="22" y="6" width="116" height="238" rx="18" fill="#0f0f14" stroke="#2a2a36" stroke-width="2" />
+                <text x="38" y="32" fill="#8a95a5" font-family="system-ui" font-size="11">Accessibility</text>
+                <line x1="34" y1="44" x2="126" y2="44" stroke="#2a2a36" />
+                <rect x="34" y="100" width="92" height="46" rx="10" fill="#181820" stroke="#2a2a36" />
+                <text x="42" y="127" fill="#f2f4f7" font-family="system-ui" font-size="10" font-weight="700">Beam control</text>
+                <rect x="100" y="116" width="22" height="13" rx="6.5" fill="#2e9bff" />
+                <circle cx="115.5" cy="122.5" r="5.5" fill="#ffffff" />
+              </svg>
+              <figcaption>2 · Settings → Accessibility → <b style="color: var(--text)">Beam control</b> → On</figcaption>
+            </figure>
+          </div>
+          <p class="note" style="margin-top: 16px">
+            <b style="color: var(--muted)">No-friction shortcut:</b> install from the Windows app's ☰ menu →
+            "Install via USB" (phone plugged in) and the toggle is <b>not</b> greyed out — skip step 1 entirely.
+          </p>
+        </div>
         <p class="note">
           <strong style="color: var(--muted)">Honest limits.</strong> Beam is built for trusted Wi-Fi:
           the link is TLS-encrypted with cert pinning, but it's LAN-only and the pairing code is the
@@ -253,7 +290,10 @@
 
     <footer>
       <div class="wrap">
-        <p><strong class="grad-text" style="font-size: 18px">Beam</strong> · v1.0</p>
+        <p>
+          <img src="icon.png" width="22" height="22" style="vertical-align: -5px; border-radius: 6px; margin-right: 6px" alt="" />
+          <strong class="grad-text" style="font-size: 18px">Beam</strong> · v1.0
+        </p>
         <p style="margin-top: 8px">
           <a href="https://github.com/LioMatthys/Beam">GitHub</a> ·
           <a href="https://github.com/LioMatthys/Beam/releases/latest">Download</a> ·
