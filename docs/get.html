@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="icon.png" />
+    <title>Get Beam for Android</title>
+    <meta name="description" content="Download the Beam Android app and enable Accessibility once." />
+    <style>
+      :root {
+        --bg: #0f0f14;
+        --surface: #181820;
+        --surface-2: #22222d;
+        --border: #2a2a36;
+        --text: #f2f4f7;
+        --muted: #8a95a5;
+        --dim: #5c6675;
+        --apricot: #ffa24b;
+        --blue: #2e9bff;
+        --grad: linear-gradient(120deg, #ffa24b 0%, #b24be6 50%, #2e9bff 100%);
+        --font: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        --mono: 'Cascadia Code', Consolas, 'SF Mono', Menlo, monospace;
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--font);
+        line-height: 1.55;
+        -webkit-font-smoothing: antialiased;
+        overflow-x: hidden;
+        min-height: 100vh;
+      }
+      .glow {
+        position: fixed;
+        inset: 0;
+        background: radial-gradient(60% 40% at 50% 0%, rgba(46, 155, 255, 0.18), transparent 70%),
+          radial-gradient(40% 30% at 80% 8%, rgba(255, 162, 75, 0.14), transparent 70%);
+        pointer-events: none;
+        z-index: 0;
+      }
+      .wrap { position: relative; z-index: 1; max-width: 520px; margin: 0 auto; padding: 48px 22px 64px; }
+      .logo-mark { width: 76px; height: 76px; margin: 0 auto 18px; display: block;
+        filter: drop-shadow(0 8px 24px rgba(46,155,255,0.25)); }
+      h1 { font-size: clamp(28px, 8vw, 40px); font-weight: 900; letter-spacing: -1px; text-align: center; line-height: 1.05; }
+      .grad-text { background: var(--grad); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+      .tagline { color: var(--muted); font-weight: 600; text-align: center; margin: 14px auto 0; max-width: 420px; }
+
+      .cta { display: flex; gap: 10px; align-items: center; justify-content: center; margin: 32px 0 10px;
+        padding: 18px 26px; border-radius: 16px; font-weight: 900; font-size: 18px; letter-spacing: 0.3px;
+        color: #0f0f14; background: var(--grad); width: 100%; border: 0; cursor: pointer;
+        text-decoration: none; }
+      .cta:active { opacity: 0.9; }
+      .sub { text-align: center; color: var(--dim); font-size: 13px; }
+      .sub a { color: var(--blue); text-decoration: none; }
+
+      .callout { margin-top: 26px; background: var(--surface); border: 1px solid var(--border);
+        border-radius: 14px; padding: 16px 18px; font-size: 14px; color: var(--muted); }
+      .callout b { color: var(--text); }
+      .callout code { font-family: var(--mono); font-size: 12.5px; background: var(--surface-2);
+        border: 1px solid var(--border); border-radius: 6px; padding: 1px 6px; color: var(--text);
+        word-break: break-all; }
+
+      .steps { counter-reset: s; margin-top: 30px; display: grid; gap: 12px; }
+      .step { display: grid; grid-template-columns: 40px 1fr; gap: 14px; align-items: start;
+        background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px; }
+      .step .n { width: 34px; height: 34px; border-radius: 10px; background: var(--grad); color: #0f0f14;
+        font-weight: 900; font-size: 16px; display: grid; place-items: center; }
+      .step h4 { font-size: 15px; font-weight: 800; margin-bottom: 3px; }
+      .step p { color: var(--muted); font-size: 13.5px; }
+      .step code { font-family: var(--mono); font-size: 12.5px; color: var(--text); }
+
+      footer { text-align: center; color: var(--dim); font-size: 13px; margin-top: 36px; }
+      footer a { color: var(--blue); text-decoration: none; }
+    </style>
+  </head>
+  <body>
+    <div class="glow"></div>
+    <div class="wrap">
+      <img class="logo-mark" src="icon.png" alt="Beam" />
+      <h1>Get Beam<span class="grad-text">.</span></h1>
+      <p class="tagline">Install the Android app, then enable Accessibility once.</p>
+
+      <a class="cta" href="https://github.com/LioMatthys/Beam/releases/latest/download/Beam.apk" download>
+        ↓ Download Beam.apk
+      </a>
+      <p class="sub">
+        ~100&nbsp;MB · Android 11+ ·
+        <a href="https://github.com/LioMatthys/Beam/releases/latest">all releases</a>
+      </p>
+
+      <div class="callout">
+        <b>Download not starting or stuck?</b> Some QR scanners open links in a limited in-app
+        browser that stalls on large files. Tap the ⋮ menu and choose <b>“Open in Chrome”</b>
+        (or paste this link into Chrome):<br />
+        <code>github.com/LioMatthys/Beam/releases/latest/download/Beam.apk</code>
+      </div>
+
+      <div class="steps">
+        <div class="step">
+          <div class="n">1</div>
+          <div>
+            <h4>Open the downloaded APK</h4>
+            <p>Tap it in your notifications or Downloads. Allow <b>“install unknown apps”</b> if asked.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="n">2</div>
+          <div>
+            <h4>Enable Accessibility once</h4>
+            <p><b>Settings → Accessibility → Beam control → On.</b> This is the phone’s “hands.”</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="n">3</div>
+          <div>
+            <h4>Toggle greyed out? (sideload)</h4>
+            <p>Settings → Apps → Beam → ⋮ → <b>Allow restricted settings</b>, then retry step 2.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="n">4</div>
+          <div>
+            <h4>Connect</h4>
+            <p>Open Beam, tap <b>Start sharing</b>, and enter the IP + 6-digit code in the desktop app.</p>
+          </div>
+        </div>
+      </div>
+
+      <footer>
+        <a href="./">← Beam overview</a> ·
+        <a href="https://github.com/LioMatthys/Beam">GitHub</a>
+      </footer>
+    </div>
+  </body>
+</html>

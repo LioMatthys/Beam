@@ -72,9 +72,10 @@ flows survive layout changes.
 
 <img src="assets/beam-qr-android.png" width="180" align="right" alt="Scan to download Beam.apk" />
 
-**Scan with your phone's camera** to download the latest `Beam.apk`, then open it to install
-(allow "install unknown apps"). The QR points at `releases/latest`, so it keeps working across
-releases. Or grab it from the
+**Scan with your phone's camera** to open the [install page](https://liomatthys.github.io/Beam/get.html),
+then tap **Download Beam.apk** and open it to install (allow "install unknown apps"). The QR points at
+a stable page (not the raw binary) so the system browser handles the large download reliably and it
+keeps working across releases. Or grab the APK straight from the
 [**Releases page**](https://github.com/LioMatthys/Beam/releases/latest), or click **"Download the
 Android app"** in the Windows app for the same QR.
 

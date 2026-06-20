@@ -7,9 +7,11 @@ import { AGENT_PROMPT } from '../../../shared/agent-prompt'
 import { QRCodeSVG } from 'qrcode.react'
 import logo from '../assets/logo.png'
 
-// Stable GitHub URL that 302-redirects to the latest release's Beam.apk asset, so the
-// QR keeps working across future releases without regenerating it.
-const APK_QR_URL = 'https://github.com/LioMatthys/Beam/releases/latest/download/Beam.apk'
+// The QR points at a phone-first install page, NOT the raw .apk. Scanning with a camera
+// usually opens a limited in-app browser that stalls on a ~100 MB cross-host redirected
+// download; an HTML page hands the download to Chrome / the system Download Manager (robust)
+// and carries the "open in Chrome" fallback + Accessibility steps. Stable across releases.
+const APK_QR_URL = 'https://liomatthys.github.io/Beam/get.html'
 
 interface Props {
   onConnect: (opts: ConnectOptions) => void
@@ -240,7 +242,8 @@ export function Connect({ onConnect, error }: Props): React.JSX.Element {
               <QRCodeSVG value={APK_QR_URL} size={200} bgColor="#ffffff" fgColor="#0f0f14" level="M" />
             </div>
             <p className="hint" style={{ marginTop: 12 }}>
-              Scan with your phone’s camera to install.
+              Scan with your phone’s camera to install. Opens the download page — tap{' '}
+              <b>Download Beam.apk</b> there.
             </p>
             <div className="spacer-sm" />
             <button className="tbtn" style={{ width: '100%' }} onClick={() => setShowQr(false)}>
